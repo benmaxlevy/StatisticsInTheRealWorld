@@ -1,0 +1,174 @@
+---
+title: 'CEMA 0907: Problem Set 1'
+author: 'Benjamin Levy'
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+**Please complete your problem set in this R Markdown document!**
+
+```{r, warning = FALSE, message = FALSE}
+# Load any R Packages you may need, and install any that you haven't installed yet
+library(tidyverse)
+library(babynames)
+```
+
+## Exercise 1
+
+In this exercise, you will begin thinking about some commonly-used descriptive statistics for *numerical* data.
+
+Please read Stephen Gould's *The Median isn't the Message* here: <https://journalofethics.ama-assn.org/article/median-isnt-message/2013-01>
+
+### (a)
+
+Discuss reasons the author gave for his optimism, even though the median life expectancy he faced was 8 months.
+
+**TYPE YOUR ANSWER HERE**
+
+### (b)
+
+Put yourself in the shoes of a medical professional. Would you report the mean or the median to the patient?
+
+**TYPE YOUR ANSWER HERE**
+
+### (c)
+
+Why does the author include the Mark Twain quote ("There are three kinds of lies: lies, damned lies, and statistics")?
+
+**TYPE YOUR ANSWER HERE**
+
+## Exercise 2
+
+What is the sum of the first 100 positive integers? The formula for the sum of integers 1 through `n` is n\*(n+1)/2. Define `n = 100` and then use R to compute the sum of 1 through 100 using the formula. What is the sum?
+
+```{r}
+# Type your code here
+
+```
+
+**TYPE YOUR ANSWER HERE**
+
+## Exercise 3
+
+### (a)
+
+Use the `c()` function to create a vector with the average high temperatures in January for Beijing, Lagos, Paris, Rio de Janeiro, San Juan, and Toronto, which are 35, 88, 42, 84, 81, and 30 degrees Fahrenheit. Call the object `temp`.
+
+```{r}
+# Type your code here
+
+```
+
+### (b)
+
+Create a vector with the city names and call the object `city`.
+
+```{r}
+# Type your code here
+
+```
+
+### (c)
+
+Uncomment (remove the '\#') and run the following code to combine your newly created `temp` and `city` vectors into a data frame called `temp_jan`:
+
+```{r}
+#temp_jan = data.frame(temp, city)
+```
+
+Uncomment and run the code below, and use the result to explain what `[1:3, ]` accomplishes.
+
+```{r}
+#temp_jan[1:3, ]
+```
+
+**TYPE YOUR ANSWER HERE**
+
+### (d)
+
+Access the temperature of Paris and Rio de Janeiro *only*. [Hint: Your answer to (c) might help.]
+
+```{r}
+# Type your code here
+
+```
+
+## Exercise 4
+
+A user has typed the following commands into R:
+
+```{r}
+obj1 = 2:10
+obj2 = c(2, 5)
+obj3 = c(TRUE, FALSE)
+obj4 = "12345"
+```
+
+Explain what is returned by each of the following commands:
+
+```{r, eval = FALSE}
+# (a)
+obj1 * 10
+
+# (b)
+obj1[2:4]
+
+# (c)
+obj2 + obj3
+
+# (d)
+sum(obj3)
+
+# (e)
+obj1/obj4
+```
+
+**TYPE YOUR ANSWER HERE**
+
+## Exercise 5
+
+The following exercises use the `babynames` dataset, located in the `babynames` R package.
+
+### (a)
+
+Load the `babynames` R package using the `library()` function. Verify that the package is loaded by running `View(babynames)` in the console window.
+
+Run `?babynames` in the console to open the help page for the `babynames` dataset. Using this, write a short summary of what the `babynames` dataset provides.
+
+**TYPE YOUR ANSWER HERE**
+
+### (b)
+
+How many *rows* and *columns* are included in the `babynames` dataset?
+
+**TYPE YOUR ANSWER HERE**
+
+### (c)
+
+The code below generates a line graph. While *we haven't covered this code in detail yet*, explain *what you think* each of the four lines accomplishes. What questions do you have
+
+```{r}
+babynames %>%
+  filter(name == "Anthony" & sex == "M") %>%
+  ggplot(aes(x = year, y = n)) + 
+  geom_line(color = "dodgerblue", size = 1.5)
+```
+
+What questions, if any, do you have about this code?
+
+**TYPE YOUR ANSWER HERE**
+
+## Exercise 6
+
+Go to the RStudio Tips twitter account, <https://twitter.com/rstudiotips> and find one tip that looks interesting.
+
+**TYPE YOUR ANSWER HERE**
+
+------------------------------------------------------------------------
+
+## All done!
+
+Knit the completed R Markdown file as a HTML document (click the "Knit" button at the top of the editor window) and upload it to Canvas.
