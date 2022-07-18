@@ -26,30 +26,33 @@ Please read Stephen Gould's *The Median isn't the Message* here: <https://journa
 
 Discuss reasons the author gave for his optimism, even though the median life expectancy he faced was 8 months.
 
-**TYPE YOUR ANSWER HERE**
+The author was optimistic about his situation because of his background knowledge of statistics. Specifically, he mentioned that a) most cases of the disease were found very close to if not following death, thus adding a large number of datum to the left-hand side of the Gaussian distribution (causing the distribution to become right-skewed [i.e., the right tail is smaller than the left]), and b) because of his socioeconomic situation (e.g., having access to outstanding heath care and being relatively young), he felt that he was likely to be on the right half of the distribution (i.e., higher life expectancy).
 
 ### (b)
 
 Put yourself in the shoes of a medical professional. Would you report the mean or the median to the patient?
 
-**TYPE YOUR ANSWER HERE**
+If I were a medical professional, I would report the mean to the patient. This is because of the fact that the distribution is heavily right-skewed. This fact indicates that the majority of samples are to the right of the mode (and median), and thus, the mean would illustrate a longer, more accurate life expectancy than the median. This would allow people to be more optimistic about their condition and life expectancy, which could, as Gould discusses, increase patients' life expectancies. Besides the right-skewedness of the distribution, the mean includes all data points, making it much more inclusive (and thus representative) of the overall population. One caveat to keep in mind though is that if a fraction of the data is towards an extreme, then the mean will likely tend toward it (this is also true for the median as well though).
 
 ### (c)
 
 Why does the author include the Mark Twain quote ("There are three kinds of lies: lies, damned lies, and statistics")?
 
-**TYPE YOUR ANSWER HERE**
+The author includes this quote because statisticians can only present certain metrics of data in order to support one argument or another, thus making it seem like statistics can sometimes be analogous to lies.
 
 ## Exercise 2
 
 What is the sum of the first 100 positive integers? The formula for the sum of integers 1 through `n` is n\*(n+1)/2. Define `n = 100` and then use R to compute the sum of 1 through 100 using the formula. What is the sum?
 
 ```{r}
-# Type your code here
+n <- 100
+vec <- 1:n
+sum(vec) # using a built-in method
+n*(n+1)/2 # formula
 
 ```
 
-**TYPE YOUR ANSWER HERE**
+5050
 
 ## Exercise 3
 
@@ -58,7 +61,7 @@ What is the sum of the first 100 positive integers? The formula for the sum of i
 Use the `c()` function to create a vector with the average high temperatures in January for Beijing, Lagos, Paris, Rio de Janeiro, San Juan, and Toronto, which are 35, 88, 42, 84, 81, and 30 degrees Fahrenheit. Call the object `temp`.
 
 ```{r}
-# Type your code here
+temp <- c(35, 88, 42, 84, 81, 30)
 
 ```
 
@@ -67,7 +70,7 @@ Use the `c()` function to create a vector with the average high temperatures in 
 Create a vector with the city names and call the object `city`.
 
 ```{r}
-# Type your code here
+city <- c("Beijing", "Lagos", "Paris", "Rio de Janeiro", "San Juan", "Toronto")
 
 ```
 
@@ -76,23 +79,23 @@ Create a vector with the city names and call the object `city`.
 Uncomment (remove the '\#') and run the following code to combine your newly created `temp` and `city` vectors into a data frame called `temp_jan`:
 
 ```{r}
-#temp_jan = data.frame(temp, city)
+temp_jan = data.frame(temp, city)
 ```
 
 Uncomment and run the code below, and use the result to explain what `[1:3, ]` accomplishes.
 
 ```{r}
-#temp_jan[1:3, ]
+temp_jan[1:3, ]
 ```
 
-**TYPE YOUR ANSWER HERE**
+This syntax displays rows one through three, selecting all columns (e.g., if 0 was passed in after the comma, only the index of each row would be displayed).
 
 ### (d)
 
 Access the temperature of Paris and Rio de Janeiro *only*. [Hint: Your answer to (c) might help.]
 
 ```{r}
-# Type your code here
+temp_jan[3:4, ]
 
 ```
 
@@ -126,7 +129,11 @@ sum(obj3)
 obj1/obj4
 ```
 
-**TYPE YOUR ANSWER HERE**
+(a) This is scalar vector/matrix multiplication. This expression returns `[1] 20 30 40 50 60 70 80 90 100`.
+(b) This is simply displaying the values at indices two through four (inclusive). This expression returns `[1] 3 4 5` . Notice how this is not `[1] 30 40 50`. This is because line 117 is not setting `obj1` to the result of the scalar multiplication.
+(c) This is simply adding these two vectors (matrices) element-wise. This expression returns `[1] 3 5`. The two is incremented to a three because `TRUE` has a true value of `1`, while five stays the same because `FALSE` has a value of `0`.
+(d) This is simply taking the summation of all the elements within vector `obj3`. This expression returns `[1] 1`, as `TRUE` has an integer value of `1`, and `FALSE` has an integer value of `0`.
+(e) This expression produces an error. This returns an error because while `obj1` is a vector of integers, `obj4` is simply a vector of one string, which cannot be used in division in this manner.
 
 ## Exercise 5
 
@@ -138,17 +145,17 @@ Load the `babynames` R package using the `library()` function. Verify that the p
 
 Run `?babynames` in the console to open the help page for the `babynames` dataset. Using this, write a short summary of what the `babynames` dataset provides.
 
-**TYPE YOUR ANSWER HERE**
+The `babynames` dataset includes at least somewhat popular names that parents assign to their children. The data features (i.e., columns) are `year` (birth year of baby who was assigned that particular name), `sex` (self-explanatory), `name` (self-explanatory), `n` (number of babies named that particular name in the respective year), and `prop` (the proportion of `n` to the total number of applicants in a given year).
 
 ### (b)
 
 How many *rows* and *columns* are included in the `babynames` dataset?
 
-**TYPE YOUR ANSWER HERE**
+There are 1,924,665 rows and five columns in the `babynames` dataset.
 
 ### (c)
 
-The code below generates a line graph. While *we haven't covered this code in detail yet*, explain *what you think* each of the four lines accomplishes. What questions do you have
+The code below generates a line graph. While *we haven't covered this code in detail yet*, explain *what you think* each of the four lines accomplishes.
 
 ```{r}
 babynames %>%
@@ -159,15 +166,19 @@ babynames %>%
 
 What questions, if any, do you have about this code?
 
-**TYPE YOUR ANSWER HERE**
+My thoughts: First, the non-native `%>%` operator seems to be analogous to a pipe `|` in Unix, where the preceding value is "piped into" the following method. Line #1: Piping in the `babynames` dataset into the filter method Line #2: Filtering the `babynames` dataset by the two conditions `name == "Anthony` and `sex == "M"` (isolating all rows that meet these criteria). Then, this filtered dataset gets fed into the next method. Line #3: Displays the graph layout (no data) Line #4: Adds the data in the form of a line with the specified parameters on the graph
+
+Questions:
+
+1\. What is the method `aes()`?
+
+2\. How does the addition/concatenation work between lines three and four?
 
 ## Exercise 6
 
 Go to the RStudio Tips twitter account, <https://twitter.com/rstudiotips> and find one tip that looks interesting.
 
-**TYPE YOUR ANSWER HERE**
-
-------------------------------------------------------------------------
+<https://twitter.com/rstudio/status/1524422593553387520> is interesting because it allows us to preview the rendering of our markdown (MD) files.
 
 ## All done!
 

@@ -8,7 +8,6 @@ my_sample
 # some cool stats on vector 'my_sample'
 summary(my_sample)
 
-View(flights)
 
 # accessing properties of obj (use $)
 flights$dep_delay
