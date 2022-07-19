@@ -95,7 +95,7 @@ This syntax displays rows one through three, selecting all columns (e.g., if 0 w
 Access the temperature of Paris and Rio de Janeiro *only*. [Hint: Your answer to (c) might help.]
 
 ```{r}
-temp_jan[3:4, ]
+temp_jan[3:4, 1]
 
 ```
 
