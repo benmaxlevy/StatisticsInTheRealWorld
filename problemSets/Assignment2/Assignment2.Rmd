@@ -1,0 +1,161 @@
+---
+title: 'CEMA 0907: Problem Set 2'
+author: 'TYPE YOUR NAME HERE'
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+```{r, include = FALSE}
+# Load any R Packages you may need, and install any that you haven't installed yet
+library(tidyverse)
+library(gapminder)
+```
+
+## Exercise 1
+
+Find an interesting data visualization on the Internet and provide the URL. <http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html>
+
+### (a)
+
+Describe the variables in the plot, and identify their types.
+
+gdpPercap (X/independent) - number representing the GDP per capita in the data point's respective country. lifeExpectancy (Y/dependent) - number that represents the life expectancy
+
+### (b)
+
+Describe the components of the Grammar of Graphics relevant to this visualization (data, aesthetic properties, geometric objects).
+
+-   Data
+    -   Populations within different continents and states with varying populations and their associated GDP per capita
+-   Aesthetic properties
+    -   X=gdpPercap
+    -   Y=lifeExpectancy
+    -   fill=continent
+-   Labels
+    -   title=`respective year`
+-   Geometric objects
+    -   `geo_point(...)`
+
+### (c)
+
+Critique this data visualization.
+
+-   If you *liked* the visualization: What is it doing well?
+    -   Not too overcrowded; it represents the data at hand with relative simplicity and makes use of changing the colors (using `aes(fill=x)`) of the points to represent different things without adding another layer.
+-   ~~If you *disliked* the visualization: What would you change?~~
+
+## Exercise 2
+
+This exercise uses the `gapminder` dataset in the `gapminder` package, which contains information on various countries from 1952 through 2007. Run the following code to extract only the data for 2007; use `gapminder_2007` for this exercise.
+
+```{r}
+gapminder_2007 = gapminder %>% 
+  filter(year == 2007)
+```
+
+```{r, eval = FALSE}
+View(gapminder_2007)
+```
+
+Write code to recreate [Figure 2.1](https://moderndive.com/2-viz.html#fig:gapminder) in *ModernDive* *as close as possible*.
+
+```{r}
+options(scipen=1000000000)
+gapminder %>%
+  filter(gdpPercap <= 50000) %>%
+  ggplot(mapping = aes(x = gdpPercap, y = lifeExp, color = continent, size = pop)) +
+  geom_point() +
+  labs(x = "GDP per capita", y = "Life expectancy")
+
+```
+
+## Exercise 3
+
+These exercises use the `mpg` data from the `ggplot2` package (in the `tidyverse`).
+
+### (a)
+
+Run the following code:
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = "blue"))
+```
+
+Even though the code has `color = "blue"`, explain why the points are not blue.
+
+In order to get them to be blue, this parameter must be specified for `geom_point(…)`, not `aes(…)`.
+
+### (b)
+
+Create a scatterplot of highway miles per gallon (*y*) against engine displacement, in liters (*x*). Map an additional numerical variable to the `color` aesthetic. Explain how this aesthetic behave differently for categorical vs. numerical variables.
+
+```{r}
+mpg %>%
+  ggplot(mapping = aes(x = hwy, y = displ, color = cyl)) +
+  geom_point()
+
+mpg %>%
+  ggplot(mapping = aes(x = hwy, y = displ, color = model)) +
+  geom_point()
+```
+
+When inputting a numerical value for the `color`, it provides a gradient key, while when inputting a non-numeric (categorical) value for the `color`, a key of all the possibilities is provided.
+
+### (c)
+
+Create a scatterplot of highway miles per gallon (*y*) against engine displacement, in liters (*x*), using different-colored points for cars with *at least 20 city miles per gallon* versus cars with *less than 20 city miles per gallon*. [Hint: Do this by mapping the `color` aesthetic to the appropriate *logical* vector.]
+
+```{r}
+mpg %>%
+  ggplot(mapping = aes(x = hwy, y = displ)) +
+  geom_point(mapping = aes(color = (cty >= 20)))
+```
+
+**TYPE YOUR ANSWER HERE**
+
+## Exercise 4
+
+The following exercises use data on board game ratings from the *Board Game Geek* database and the *TidyTuesday* Github repository. Load the data by running the following:
+
+```{r, message = FALSE}
+board_games = readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-12/board_games.csv")
+
+# Create categorical 'decade' variable
+board_games = board_games %>%
+  mutate(decade = factor(floor(year_published / 10) * 10)) %>%
+  mutate(decade = paste0(decade, "s"))
+```
+
+```{r, eval = FALSE}
+View(board_games)
+```
+
+### (a)
+
+Create an informative and meaningful data graphic using these data.
+
+```{r, message = FALSE}
+board_games %>%
+  ggplot(mapping = aes(x = year_published, y = max_players)) +
+  geom_smooth(color = "chartreuse")
+```
+
+### (b)
+
+Create a data graphic with at least *four* variables (either quantitative or categorical). For the purposes of this exercise, do not worry about making your visualization meaningful -- just try to encode four variables into one plot. [Note: This is *not* good graphical practice -- it is merely an exercise to help you understand how to use visual cues and aesthetics!]
+
+```{r}
+board_games %>%
+  ggplot(mapping = aes(x = year_published, y = max_players, color = min_age, size = max_playtime)) +
+  geom_point()
+```
+
+------------------------------------------------------------------------
+
+## All done!
+
+Knit the completed R Markdown file as a HTML document (click the "Knit" button at the top of the editor window) and upload it to Canvas.

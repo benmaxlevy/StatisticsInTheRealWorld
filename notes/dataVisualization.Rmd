@@ -31,9 +31,7 @@ library(nycflights13)
 -   Labels, themes, point transparency, annotations, coordinate system
 -   Labels
     -   Add using `labs()`
-
     -   Add title (`title=`)
-
     -   Add subtitle (`subtitle=`)
 
 # Building ggplots
