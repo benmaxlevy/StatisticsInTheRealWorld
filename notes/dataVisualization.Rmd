@@ -1,0 +1,172 @@
+---
+title: "Data Visualization"
+author: "Ben Levy"
+date: "2022-07-19"
+output: html_document
+---
+
+# Imports
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+# Grammar of Graphics
+
+## Three required components for a **valid** data graphic
+
+-   **Data**
+-   **Aesthetic attributes**
+    -   Makes the graph axis and other appearance deviations from the default
+    -   E.g., x-position; y-position; size, color, and shape of points
+    -   Maps from the data (mapping from variables in data to aesthetic attributes)
+-   **Geometric object** or **geom**
+    -   I.e., type of graph (e.g., line graph)
+    -   `geom_type` (e.g., `geom_point`)
+    -   Can specify certain stylistic variables (e.g., alpha [opacity])
+
+## Optional Components
+
+-   Labels, themes, point transparency, annotations, coordinate system
+-   Labels
+    -   Add using `labs()`
+
+    -   Add title (`title=`)
+
+    -   Add subtitle (`subtitle=`)
+
+# Building ggplots
+
+## Graph of the Relationship Between `wt` and `mpg` in the `mtcars` dataset.
+
+Negative association (non-linear). I.e., as one increases, another decreases
+
+```{r}
+mtcars %>% 
+  ggplot(aes(x = wt, y = mpg)) + 
+  geom_smooth() + 
+  geom_point()
+  
+```
+
+## 5 Common Plots
+
+### Scatterplots
+
+-   Effective for visualizing two **NUMERICAL** variables
+-   Can add on other variables (e.g., a variable to color code the points)
+
+Looking at the `flights` dataset (**correlation between flights' departure delay and arrival delay**), looking at only `F9` (Frontier):
+
+```{r, warning = FALSE, message = FALSE}
+nycflights13::flights %>%
+  filter(carrier == "F9") %>%
+  ggplot(mapping = aes(x = dep_delay, y = arr_delay)) +
+  geom_point(alpha = 0.25) +
+  geom_smooth(method = "lm", color = "red", size = 1.5)
+```
+
+### Linegraphs
+
+-   Similar to scatterplots, but the `x` variable is usually **TIME-RELATED** (a continuous variable).
+
+A great example is weather from `JFK` from November 1 through November 18 by the `datetime`:
+
+```{r}
+nycflights13::weather %>%
+  filter(origin == "JFK", month == 11 & day <= 18) %>%
+  ggplot(mapping = aes(x = time_hour, y = temp)) +
+  geom_line(size = 1, color = "blue") +
+  geom_point(alpha = 0.25, size = 2) +
+  labs(x = "Date", y = "Temperature (F°)", title = "Hourly Temperature Recordings from JFK Airport", subtitle = "November 1-18 in 2013") +
+  theme_linedraw() +
+  theme(plot.title = element_text(color = "blue", hjust = 0.5, face = "bold"), plot.subtitle = element_text(hjust = 0.5))
+```
+
+### Histograms
+
+-   Graphics for visualizing the **distribution** of a **SINGLE** **numerical** variable
+-   You can **ONLY** specify the x-axis label
+-   Items to look at in histograms
+    -   Center (i.e., median)
+    -   Shape (i.e., skewedness)
+    -   Spread (i.e., range of data, range of certain percentile)
+- **NOT A BAR GRAPH**
+  - As histograms can only contain **numerical** data
+- The `fill=` parameter can be used to change the background color of each bar
+- Facets
+  - Split a dataset by something (e.g., month)
+
+Looking at the temperatures in the `nycflights13::weather` dataset by count
+
+```{r, warning = FALSE, message = FALSE}
+nycflights13::weather %>%
+  ggplot(mapping = aes(x = temp)) +
+  geom_histogram(color = "white", fill = "hotpink") +
+  facet_wrap(~month) +
+  labs(x = "Temperature (F°)", title = "Temperatures by Month in Three Main Airports in NYC") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+-   The shape of this is **bimodal** (i.e., two main peaks)
+    -   There are two main "modes"
+
+### Boxplots
+
+- Boxplots are similar to histograms, but they are **NOT** the same
+- Boxplots show the distribution of a single numerical variable (same as histograms)
+  - Side-by-side boxplots with a **categorical x** and **numerical y**
+- Boxplots visualize **five** points
+  - Minimum
+  - First quartile (25th percentile: the first 25% of the data)
+  - Median
+  - Third quartile (75th percentile: the first 75% of the data)
+  - Maximum
+- The box represents the middle 50% of an ordered dataset (interquartile range: IQR)
+
+```{r}
+summary((nycflights13::weather %>%
+  filter(origin == "JFK", month == 11 & day <= 18))$temp)
+```
+
+Visualizing the relationship between month and temperature using side-by-side boxplots using `nycflights13::weather`:
+
+Note: *We need to force `month` to be categorical in order for the boxplots to display side-by-side.* Can do this using `factor(x)`, where `x` is the x-variable.
+
+```{r, warning = FALSE}
+nycflights13::weather %>%
+  ggplot(mapping = aes(x = factor(month), y = temp)) +
+  geom_boxplot() +
+  labs(x = "month")
+```
+
+### Barplots/Bar graphs
+
+- Categorical x-value(s)
+- y-axis shows count (or other summary statistic [e.g., mean])
+- Pre-counted data: `geom_bar()` - specify x-aesthetic
+- Counted data: `geom_col()` - specify both x- and y-aesthetic
+
+Making a bar graph of the pre-counted data: `carrier` from `nycflights13::flights`:
+
+```{r}
+nycflights13::flights %>%
+  ggplot(mapping = aes(x = carrier)) +
+  geom_bar() +
+  coord_flip()
+```
+
+Finding the relationship between carrier and origin (airport):
+
+- Map fill to the `origin`
+  - Adjusts the colors of portions of bars to certain carriers
+- Adding `position = "fill"` to the parameters of `geom_bar(...)` normalizes the bar graphs (allowing for better comprehension of the graph)
+
+```{r}
+nycflights13::flights %>%
+  ggplot(mapping = aes(x = carrier, fill = origin)) +
+  geom_bar(position = "fill") +
+  coord_flip()
+```
