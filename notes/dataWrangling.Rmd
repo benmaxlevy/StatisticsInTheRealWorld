@@ -1,0 +1,137 @@
+---
+title: "Data Wrangling"
+author: "Ben Levy"
+date: "2022-07-20"
+output: html_document
+---
+
+# Data Wrangling
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+library(gapminder)
+```
+
+## (Non-Native) Pipe Operator: `%>%`
+
+-   Behaves just like a literal pipe (`|`) in Unix-based systems
+
+### Filtering All Flights Carried by JetBlue & Summarize the Flight Distances
+
+```{r}
+nycflights13::flights %>%
+  filter(carrier == "B6") %>%
+  group_by(origin) %>%
+  summarize(mean_distance = mean(distance))
+# analogous to:
+summarize(group_by(filter(nycflights13::flights, carrier == "B6"), origin), mean_distance = mean(distance))
+```
+
+## Five Main Function for Data Wrangling with DPlyer (D-Plier)
+
+-   `select()`
+    -   Subset of columns (e.g., SQL: `SELECT <column(s)> FROM <table>`)
+-   `filter()`
+    -   Subset of rows (e.g., SQL: `SELECT * FROM <table> WHERE <condition(s)> = <value(s)>`)
+-   `mutate()`
+    -   Add or modify existing columns
+-   `arrange()`
+    -   Sort rows
+-   `summarize()`
+    -   Aggregate data in some shape
+
+### `select()`
+
+```{r}
+gapminder %>%
+  select(country, year, lifeExp) -> gapminder_condensed
+```
+
+### `filter()`
+
+#### Get all rows for the United States
+
+```{r}
+gapminder %>%
+  filter(country == "United States") -> gapminder_us
+```
+
+#### Get all rows for the United States or Canada from 1980-present
+
+```{r, warning=FALSE, message=FALSE}
+gapminder %>%
+  filter((country == "United States" | country == "Canada") & year >= 1980) -> gapminder_combo
+#OR
+gapminder %>%
+  filter(country %in% c("United States", "Canada") & year >= 1980) -> gapminder_combo_in 
+  # %in% checks if the country column's value is within the following vector
+gapminder_combo_in %>%
+  select(year, country, lifeExp) %>%
+  ggplot(aes(x = year, y = lifeExp, color = country)) +
+  geom_point() +
+  geom_smooth()
+```
+
+### `arrange()`
+
+#### Sort by year and continent in ascending order
+
+```{r}
+gapminder %>%
+  arrange(year, continent) 
+  # specifying more than one parameter (column to sort by) will simply give the first priority over the second, etc.
+```
+
+#### Sort by descending order (wrap with `desc()`)
+
+```{r}
+gapminder %>%
+  arrange(desc(pop))
+```
+
+#### Extract the top 5 recordings in terms of `pop`
+
+- Use `slice_max()`
+  - `slice_min()` starts from the minimum
+
+```{r}
+gapminder %>%
+  filter(year < 2000) %>%
+  slice_max(pop, n = 5)
+```
+
+### `mutate()`
+
+- Adds columns to an existing dataset
+
+#### Convert degrees F to degrees C in the `nycflights13::weather` dataset
+
+```{r}
+nycflights13::weather %>%
+  mutate(temp_C = (temp-32)/1.8) -> weather
+```
+
+### `summarize()` with `group_by()`
+
+- Another method to calculate basic stats
+
+#### Calculating the mean and SD of temperatures from the `weather` dataset
+
+- Use `na.rm = TRUE` in R stat functions to remove any null values
+
+```{r}
+weather %>%
+  summarize(mean_F = mean(temp, na.rm = TRUE), sd_F = sd(temp, na.rm = TRUE))
+```
+
+#### Calculating these stats for each airport
+
+- `group_by(...)` makes categories based on the parameter (a column)
+
+```{r}
+weather %>%
+  group_by(origin) %>%
+  summarize(mean(temp, na.rm = TRUE), sd(temp, na.rm = TRUE))
+```
+

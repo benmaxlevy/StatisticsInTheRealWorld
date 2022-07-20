@@ -118,11 +118,13 @@ nycflights13::weather %>%
   - Side-by-side boxplots with a **categorical x** and **numerical y**
 - Boxplots visualize **five** points
   - Minimum
+    - Actually $Q1-1.5*IQR$
   - First quartile (25th percentile: the first 25% of the data)
   - Median
   - Third quartile (75th percentile: the first 75% of the data)
+    - Actually $Q3+1.5*IQR$
   - Maximum
-- The box represents the middle 50% of an ordered dataset (interquartile range: IQR)
+- The box represents the middle 50% of an ordered dataset (interquartile range: IQR: $Q3-Q1$)
 
 ```{r}
 summary((nycflights13::weather %>%
