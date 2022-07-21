@@ -1,0 +1,199 @@
+---
+title: 'CEMA 0907: Problem Set 3'
+author: 'TYPE YOUR NAME HERE'
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+```{r, warning = FALSE, message = FALSE}
+# Load any R Packages you may need, and install any that you haven't installed yet
+library(tidyverse)
+library(fivethirtyeight)
+library(janitor)
+```
+
+
+## Exercise 1
+
+Using the `starwars` dataset in the `tidyverse`, recreate the table given in `starwars_table.png` (the numbers won't be rounded if you run the code in R Markdown instead of the console - that's OK!). The formula for BMI is *mass (in kg)* / (*height (in cm)*/100)^2. [Hint: Use `na.rm = TRUE` in any calculations involving `mean()`!]
+
+```{r}
+starwars %>%
+  add_count(species, sort = TRUE) %>%
+  group_by(species) %>%
+  summarize(n=n, avg_height = mean(height, na.rm = TRUE), avg_mass = mean(mass, na.rm = TRUE), avg_bmi = mean(mass/(height/100)^2)) %>%
+  distinct() %>%
+  arrange(desc(n))
+
+```
+
+
+## Exercise 2
+
+The data for this exercise are contained in the `college_recent_grads` data frame from the `fivethirtyeight` package. This (slightly outdated) dataset contains information on college majors and earnings and is featured in [this article](https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/). 
+
+### (a)
+Using an appropriate pipeline, arrange the data in descending order with respect to unemployment rate, and display only the major, the total number of people with the major, the unemployment rate, and the median annual income. Show only the *five majors with largest unemployment rates* by adding `slice_max(unemployment_rate, n = 5)` to the end of the pipeline. 
+
+```{r}
+college_recent_grads %>%
+  arrange(desc(unemployment_rate)) %>%
+  select(major, total, unemployment_rate, median) %>%
+  slice_max(unemployment_rate, n = 5)
+```
+
+### (b)
+Which *major categories* are the *two least popular* in the sample, in terms of the `total` number of people with majors in the major category?
+
+```{r}
+college_recent_grads %>%
+  slice_min(total, n = 2) %>%
+  select(major_category)
+```
+
+### (c)
+The code below creates a new variable called `major_type`, which is a *logical* variable indicating whether or not a major category is a STEM field. 
+
+```{r}
+college_recent_grads = college_recent_grads %>%
+  mutate(major_type = 
+           ifelse(major_category %in% 
+                    c("Biology & Life Science", "Computers & Mathematics", 
+                      "Engineering", "Physical Sciences"), 
+                  "STEM", "Not STEM")
+         )
+```
+
+Using this new data frame, find the STEM majors with median annual income of *less than* 36000. Report a table with the major, the median annual income, and the total number of people with that major. 
+
+```{r}
+college_recent_grads %>%
+  filter(major_type == "STEM" & median < 36000) %>%
+  select(major, median, total)
+```
+
+
+## Exercise 3
+
+This exercise uses avocado pricing data from the *Hass Avocado Board* and [Kaggle](https://www.kaggle.com/neuromusic/avocado-prices). The data can be imported using the following code:
+
+```{r}
+avocado = read.csv("https://raw.githubusercontent.com/abhijitshow07/Avocado-Price-Prediction-in-USA/master/avocado.csv") %>%
+  mutate(Date = as.Date(Date))
+```
+
+Some of the main columns of interest include:
+- `Date` - The date of the observation
+- `AveragePrice` - the average price of an avocado, measured each week
+- `type` - conventional or organic
+- `year` - the year
+- `Region` - the city or region of the observation
+- `Total Volume` - Total number of avocados sold
+
+Also from *Kaggle*: 
+
+> The table represents weekly 2018 retail scan data for National retail volume (units) and price. Retail scan data comes directly from retailers’ cash registers based on actual retail sales of Hass avocados. Starting in 2013, the table reflects an expanded, multi-outlet retail data set. Multi-outlet reporting includes an aggregation of the following channels: grocery, mass, club, drug, dollar and military. The Average Price (of avocados) in the table reflects a per unit (per avocado) cost, even when multiple units (avocados) are sold in bags. The Product Lookup codes (PLUs) in the table are only for Hass avocados. Other varieties of avocados (e.g. greenskins) are not included in this table.
+
+
+### (a)
+Let's first look at data for *Boston* and *Los Angeles* (appearing in the data as `LosAngeles`) only. By using the appropriate function to extract only rows for Boston and Los Angeles, create a plot that shows how the Average Price of avocados has changed in each city over time. Use either `color` or `linetype` to distinguish the two cities. 
+
+Describe any associations you see between average avocado price, date, and city. 
+
+```{r}
+avocado %>%
+  filter(region == "LosAngeles" | region == "Boston") %>%
+  ggplot(aes(x = Date, y = AveragePrice, color = region)) +
+  geom_smooth()
+
+```
+
+Boston's price of avocados seems to be cyclical, where as Los Angeles' prices of avocados seem to be, generally speaking, increasing.
+
+### (b)
+Now, extract rows from `avocado` for *Boston only*. Using the Boston data and an appropriate summary measure, summarize the `AveragePrice` per `year` and `type` (conventional and organic). Describe any associations you see between the price of an avocado and its type.
+
+```{r}
+avocado %>%
+  filter(region == "Boston") %>%
+  group_by(type, year) %>%
+  summarize(MeanPrice = mean(AveragePrice, na.rm = TRUE))
+```
+
+Generally, organic avocados are priced higher than conventional avocados.
+
+### (c)
+Which three regions had the highest single-week average avocado price in 2018? Calculate the maximum `AveragePrice` within each region *for 2018 only*, and report the regions with the *top three* single-week average avocado price, along with the price itself. [Hint: The table should have three rows and two columns; one column for region, and one column for the maximum `AveragePrice`.]
+
+```{r}
+avocado %>%
+  filter(year == 2018) %>%
+  arrange(desc(AveragePrice)) %>%
+  filter(duplicated(region) == FALSE) %>%
+  slice_max(AveragePrice, n = 3) %>%
+  select(region, AveragePrice)
+```
+
+
+## Exercise 4*
+
+**This exercise is OPTIONAL! Try it if you want extra practice.**
+
+This exercise will analyze data on Bob Ross paintings using the `bob_ross` data in the `fivethirtyeight` package. Bob Ross was a legendary painter and television host who hosted *The Joy of Painting* for 11 years on PBS. Watch an episode of *The Joy of Painting* [HERE](https://www.youtube.com/watch?v=WT6n0K2zGnA). 
+
+Run the following code to clean the data a bit:
+
+```{r}
+bob_ross = fivethirtyeight::bob_ross %>% 
+  janitor::clean_names() %>% 
+  separate(episode, into = c("season", "episode"), sep = "E") %>% 
+  mutate(season = str_extract(season, "[:digit:]+")) %>% 
+  mutate_at(vars(season, episode), as.integer) %>%
+  pivot_longer(names_to = "object", 
+               values_to = "present", 
+               cols = c(-season, -episode, -episode_num, -title)) %>%
+  filter(present == 1) %>%
+  select(-present)
+```
+
+
+### (a)
+Using `geom_col()`, create a barplot showing the frequency of **the top 25** objects painted by Bob Ross over the entire run of *The Joy of Painting*. What objects appear to be Bob Ross's favorite?
+
+```{r}
+bob_ross %>%
+  add_count(object) %>%
+  arrange(desc(n)) %>%
+  select(object, n) %>%
+  distinct() %>%
+  slice_max(n, n = 25) %>%
+  ggplot(aes(x = object, y = n)) +
+  geom_col() +
+  coord_flip()
+```
+
+Tree and trees seem to be his favorite objects to paint.
+
+### (b)
+In which paintings did Bob Ross paint the most objects? Calculate the total number of objects painted *per painting*, and return a table that gives the `title` of the paintings with the *top 3* total number of objects painted, along with the number of objects. 
+
+```{r}
+bob_ross %>%
+  add_count(title) -> x
+  x$object <- NULL
+x %>%
+  group_by(title) %>%
+  summarize(numberOfObjects = n()) %>%
+  arrange(desc(numberOfObjects)) %>%
+  slice_max(numberOfObjects, n = 3)
+```
+
+
+* * *
+
+## All done!
+
+Knit the completed R Markdown file as a HTML document (click the "Knit" button at the top of the editor window) and upload it to Canvas.
