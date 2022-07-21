@@ -1549,24 +1549,26 @@ for BMI is <em>mass (in kg)</em> / (<em>height (in cm)</em>/100)^2.
 <pre class="r"><code>starwars %&gt;%
   add_count(species, sort = TRUE) %&gt;%
   group_by(species) %&gt;%
-  summarize(n=n, avg_height = mean(height, na.rm = TRUE), avg_mass = mean(mass, na.rm = TRUE), avg_bmi = mean(mass/(height/100)^2))</code></pre>
+  summarize(n=n, avg_height = mean(height, na.rm = TRUE), avg_mass = mean(mass, na.rm = TRUE), avg_bmi = mean(mass/(height/100)^2)) %&gt;%
+  distinct() %&gt;%
+  arrange(desc(n))</code></pre>
 <pre><code>## `summarise()` has grouped output by &#39;species&#39;. You can override using the
 ## `.groups` argument.</code></pre>
-<pre><code>## # A tibble: 87 × 5
+<pre><code>## # A tibble: 38 × 5
 ## # Groups:   species [38]
 ##    species      n avg_height avg_mass avg_bmi
 ##    &lt;chr&gt;    &lt;int&gt;      &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
-##  1 Aleena       1        79      15      24.0
-##  2 Besalisk     1       198     102      26.0
-##  3 Cerean       1       198      82      20.9
-##  4 Chagrian     1       196     NaN      NA  
-##  5 Clawdite     1       168      55      19.5
-##  6 Droid        6       131.     69.8    NA  
-##  7 Droid        6       131.     69.8    NA  
-##  8 Droid        6       131.     69.8    NA  
-##  9 Droid        6       131.     69.8    NA  
-## 10 Droid        6       131.     69.8    NA  
-## # … with 77 more rows
+##  1 Human       35       177.     82.8    NA  
+##  2 Droid        6       131.     69.8    NA  
+##  3 &lt;NA&gt;         4       181.     48      NA  
+##  4 Gungan       3       209.     74      NA  
+##  5 Kaminoan     2       221      88      NA  
+##  6 Mirialan     2       168      53.1    18.8
+##  7 Twi&#39;lek      2       179      55      NA  
+##  8 Wookiee      2       231     124      23.2
+##  9 Zabrak       2       173      80      NA  
+## 10 Aleena       1        79      15      24.0
+## # … with 28 more rows
 ## # ℹ Use `print(n = ...)` to see more rows</code></pre>
 </div>
 <div id="exercise-2" class="section level2">
