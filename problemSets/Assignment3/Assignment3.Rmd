@@ -22,12 +22,9 @@ Using the `starwars` dataset in the `tidyverse`, recreate the table given in `st
 
 ```{r}
 starwars %>%
-  add_count(species, sort = TRUE) %>%
   group_by(species) %>%
-  summarize(n=n, avg_height = mean(height, na.rm = TRUE), avg_mass = mean(mass, na.rm = TRUE), avg_bmi = mass/(height/100)^2) %>%
-  distinct() %>%
+  summarize(n = n(), avg_height = mean(height, na.rm = TRUE), avg_mass = mean(mass, na.rm = TRUE), avg_bmi = mean((mass/(height/100)^2), na.rm = TRUE)) %>%
   arrange(desc(n))
-
 ```
 
 
