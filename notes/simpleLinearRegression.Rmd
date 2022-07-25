@@ -1,0 +1,203 @@
+---
+title: "Simple Linear Regression"
+author: "Ben Levy"
+date: "2022-07-25"
+output: html_document
+---
+
+# Simple Linear Regression
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(palmerpenguins)
+
+options(scipen = 999)
+```
+
+## Requirements
+
+-   **Numerical** `y` (dependent/response/outcome)
+-   One **explanatory** `x`: numerical/categorical (explanatory/predictor/independent/confounder)
+
+## Question Answered by Linear Regressions
+
+What is the association between `x` and `y` (i.e., how can change in `x` **explain** change in `y`)?
+
+*Note: regressions can also be used for **prediction**.*
+
+## Formula: $y = B_0 + B_1x + \epsilon$ (population model)
+
+-   y -\> numerical
+-   x -\> numerical/categorical
+-   $\epsilon$ -\> **unobserved error**
+
+## The *Estimated* Model's Formula (fitted models)
+
+-   $\hat{y} = b_0 + b_1x$
+-   $b_0$ and $b_1$ are **regression coefficients**
+
+## Example using House Prices!
+
+**Research Question**: What factor(s) drive(s) the price of a house?
+
+Specifically, what is the association between the *number of bedrooms* (x) and the *price* (y)?
+
+### Exploration of the Data
+
+-   33 bedrooms may be a typo: remove it
+
+```{r}
+house_prices <- house_prices %>%
+  filter(bedrooms < 33)
+```
+
+```{r}
+# display graphs
+
+house_prices %>%
+  ggplot(aes(x = price)) +
+  geom_histogram(color = "white", fill = "chartreuse")
+
+house_prices %>%
+  ggplot(aes(y = bedrooms)) +
+  geom_boxplot(fill = "lightpink2")
+
+# average price
+
+house_prices %>%
+  summarize(mean_price = mean(price), sd_price = sd(price), median_price = median(price),
+            mean_bedrooms = mean(bedrooms), sd_bedrooms = sd(bedrooms), median_bedrooms = median(bedrooms))
+
+# summary
+
+summary(house_prices$bedrooms)
+```
+
+**None of these univariate statistics** tell us much about the relationship between the number of bedrooms and house price.
+
+-   The average is \$540,000, but the median is \$450,000
+    -   Mean is not resilient to large deviations, whereas median is
+    -   Mean: $\frac{x_1 + ... + x_n}{n}$
+    -   Median: middle observation(s) [mean between two if necessary]
+    -   Mean\>Median, thus the normal distribution is right-skewed (i.e., less frequency towards the outliers on the right)
+
+### Correlation Coefficient (indicated by `r`)
+
+-   Summarizes the correlation between two variables
+    -   Quantifies the *strength* if the **linear** relationship between **two** **numerical** variables
+-   $r = \frac{\sum(y-\bar{y})(x-\bar{x})}{\sqrt{\sum(y-\bar{y})^2\sum(x-\bar{x})^2}}$
+    -   $\bar{x}$ is sample mean of x variable
+-   Ranges from -1 to +1; the closer `r` gets to **either** -1 or +1, the **stronger** the correlation is.
+
+#### Calculating `r`
+
+```{r}
+house_prices %>%
+  get_correlation(price ~ bedrooms)
+```
+
+-   There's a **weak-to-moderate** linear relationship between house prices and number of bedrooms (`r` = 0.315)
+
+### Graphing a Scatterplot of Price versus Bedrooms
+
+```{r}
+house_prices %>%
+  ggplot(aes(x = bedrooms, y = price)) +
+  geom_point() +
+  geom_smooth(method = "lm") 
+```
+
+## Simple Linear Regression
+
+-   Never perfect (unless it's overfitted, which is not helpful what-so-ever for prediction)
+    -   Still can be useful and informative
+-   $\hat{y} = b_0 + b_1x$
+    -   $b_0$ and $b_1$ are **regression coefficients**
+        -   $b_0$ is our y-intercept (i.e., y-value when `x = 0`)
+        -   $b_1$ is our slope (i.e., rise-over-run)
+    -   $\hat{y}$ is the **predicted** value of `y`
+-   Our model: $\hat{price} = b_0 + b_1(bedrooms)$
+    -   The two regression coefficients will be estimated
+-   Fitting the model: `lm()`
+
+```{r}
+lm_housing <- lm(price ~ bedrooms, data = house_prices)
+
+get_regression_table(lm_housing)
+```
+
+- For each one unit of `x` (bedrooms), there is an associated **increase** in our `y` (house prices) of \$127,547.6.
+  - Much more important than intercept
+- When we have a property with 0 bedrooms (i.e., `bedrooms = 0`), the predicted price is $110,315.7.
+  - Usually doesn't make sense in context though
+  
+### Using this Model for Prediction
+
+```{r}
+predict_house_price <- function(bedrooms) {
+  110315.7 + 127547.6*bedrooms
+}
+
+predict_house_price(33)
+```
+
+- Exercise caution when extrapolating (e.g., 33 bedrooms is outside the maximum)
+  - Max number of bedrooms in the dataset that was fitted had a maximum number of bedrooms of 11
+  
+## One Categorical X
+
+### **New Question**: What is the relationshup between **waterfront view status** of a home?
+
+```{r}
+lm_housing_waterfront <- lm(price ~ waterfront, data = house_prices)
+
+get_regression_table(lm_housing_waterfront)
+```
+
+*Note: We only see `waterfrontTRUE` in the regression table. That is because, when dummy coding, R assigns one level of the `waterfront` variable to be the reference level. Generally, the first alphabetically is the reference level*. 
+
+- Equation: $\hat{price} = 531558.5 + 1130317.5 * waterfrontTRUE$
+- `waterfrontTRUE` is either 0 (false) or 1 (true)
+  - No waterfront: $\hat{price} = 531558.5 + 1130317.5*0$
+  - Waterfront: $\hat{price} - 531558.5 + 1130317.5*1$
+  
+### Exploration of Waterfront and Price
+
+```{r}
+house_prices %>%
+  group_by(waterfront) %>%
+  summarize(mean_price = mean(price))
+```
+
+- The mean price of `waterfront = FALSE` is the **intercept** of the linear regression
+- The mean price of `waterfront = TRUE` is the **slope** of the linear regression
+  - The slope means that the **difference** between the average price in waterfront and non-waterfront homes is approximately $113017.5 (i.e., `1661876.0 - 531558.5`)
+  
+### **Question: Relationship between `species` and `bill_length_mm`** (non-binary categorical x)
+```{r}
+penguins %>%
+  count(species)
+```
+
+```{r}
+lm_penguin = lm(bill_length_mm ~ species, data = penguins)
+
+get_regression_table(lm_penguin)
+```
+
+- Coefficient for chinstraps is 10.042; this tells us the average bill length for chinstrap penguins is **10.042** mm more than Adelie penguins
+
+## Residual Analysis
+
+- A residual is the error from the line
+  - $residual = y - \hat{y}$: the difference between the observed and predicted
+  - Positive residual means the prediction is too low
+  - Negative residual means the prediction is too high
+  
+```{r}
+mean(abs(get_regression_points(lm_housing)$residual))
+```
+
+- Uses mean squared error (MSE)
+  - $\frac{1}{n} \sum{(y_i-\hat{y}_i)^2}$
