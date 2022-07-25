@@ -1,0 +1,148 @@
+---
+title: 'CEMA 0907: Problem Set 4'
+author: 'Ben Levy'
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(moderndive)
+library(ISLR) # Install this!
+library(nycflights13)
+```
+
+## Exercise 1
+
+The following exercises use the `Credit` dataset from the `ISLR` package.
+
+```{r, eval = FALSE}
+View(Credit)
+?Credit
+```
+
+### (a)
+
+Construct a scatterplot of `Balance` (y) against `Income` (x), and overlay a line of best fit. Describe this relationship. Would a linear model be appropriate for examining the relationship between these variables?
+
+```{r}
+Credit %>%
+  ggplot(aes(x = Income, y = Balance)) +
+  geom_point() +
+  geom_smooth()
+```
+
+Despite the relatively wide confidence interval shown in the line of best fit, a somewhat linear line is formed by `geom_smooth`. Thus, I would say a linear regression could be a good fit in this scenario. The relationship is positive.
+
+### (b)
+
+Regardless of your answer to (a), fit a regression model for this relationship using `lm()`. Call this model `balance_fit`. Interpret the slope coefficient.
+
+```{r}
+balance_fit <- lm(Balance ~ Income, data = Credit)
+
+get_regression_table(balance_fit)
+```
+
+For every increase (one unit) in income, income increases by 6.048 units. Thus, a positive correlation can be observed from these data.
+
+## Exercise 2
+
+This exercise will look at data on Antarctican penguins, because who doesn't love penguins? The data come from the Palmer Station in Antarctica, and are hosted in a [TidyTuesday repository](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-28/readme.md)
+
+Load the data below:
+
+```{r}
+penguins = read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-28/penguins.csv')
+```
+
+```{r, eval = FALSE}
+View(penguins)
+```
+
+### (a)
+
+Create a scatterplot to display the relationship between penguin *bill length* (x) and *bill depth* (y). Describe the association between these two variables.
+
+```{r}
+penguins %>%
+  ggplot(aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point()
+```
+
+There seems to be a ***very*** loose negative correlation.
+
+### (b)
+
+Add the `color = ~species` option to your scatterplot in (a) to create a colored scatterplot with the `species` variable added. Describe any trends that you observe here that you didn't see in the previous plot
+
+```{r}
+penguins %>%
+  ggplot(aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point(aes(color = species))
+```
+
+Within the Adelie species, we can observe a loose positive correlation/trend. On the other hand, we can see a somewhat stronger positive correlation in Chinstraps. Finally, we can observe a potentially stronger positive correlation in Gentoos. Though, these observations are the opposite of what we see in the macro level, where a loose negative trend can be observed.
+
+### (c)
+
+Fit a regression model to describe a penguin's *bill depth* as a function of *bill length*. Interpret the coefficient associated with `bill_length_mm`.
+
+```{r}
+bill_length_fit <- lm(bill_depth_mm ~ bill_length_mm, data = penguins)
+
+get_regression_table(bill_length_fit)
+```
+
+As `bill_depth_mm` increases by one unit, `bill_length_mm` decreases by 0.085 units. In other words, there is a negative correlation between the two variables.
+
+### (d)
+
+Does this association match what you might expect from the scatterplot in (b)? Explain.
+
+While this association does not match what I expected at the micro level from (b), it does at the macro level. In other words, looking at the overall data, I expected a slight negative association; however, I would've expected positive associations if looking at each species individually.
+
+## Exercise 3
+
+**This exercise is OPTIONAL! Try it if you want extra practice.**
+
+Use the `nycflights13` package and the `flights` and `planes` tables to answer the following questions.
+
+```{r, eval = FALSE}
+View(flights)
+View(planes)
+```
+
+### (a)
+
+What are the three oldest planes that flew from New York City airports in 2013? Report a table with the `tailnum`, `year` manufactured, `manufacturer`, and `age` (in 2013) of the three oldest planes.
+
+*Some Hints*:
+
+-   You'll need to use an appropriate `_join()` to join the `flights` and `planes` tables together. Call this table `flights_planes`.
+-   Using `flights_planes`:
+    -   The `age` column isn't initially present, but you can create it using existing columns.
+    -   Because the same planes might have been used for many flights in 2013, use `distinct(tailnum, .keep_all = TRUE)` in your pipeline to retain distinct rows based on `tailnum`, but keep all other columns associated with that row.
+
+```{r}
+# Type your code here
+
+```
+
+### (b)
+
+Which manufacturer was used the most frequently for flights from New York City in 2013? Report a table with the name of the manufacturer, along with the number of flights using planes made by that manufacturer.
+
+```{r}
+# Type your code here
+
+```
+
+------------------------------------------------------------------------
+
+## All done!
+
+Knit the completed R Markdown file as a HTML document (click the "Knit" button at the top of the editor window) and upload it to Canvas.
