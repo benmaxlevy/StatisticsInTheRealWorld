@@ -32,7 +32,7 @@ Construct a scatterplot of `Balance` (y) against `Income` (x), and overlay a lin
 Credit %>%
   ggplot(aes(x = Income, y = Balance)) +
   geom_point() +
-  geom_smooth()
+  geom_smooth(method = "lm")
 ```
 
 Despite the relatively wide confidence interval shown in the line of best fit, a somewhat linear line is formed by `geom_smooth`. Thus, I would say a linear regression could be a good fit in this scenario. The relationship is positive.
@@ -128,8 +128,12 @@ What are the three oldest planes that flew from New York City airports in 2013? 
     -   Because the same planes might have been used for many flights in 2013, use `distinct(tailnum, .keep_all = TRUE)` in your pipeline to retain distinct rows based on `tailnum`, but keep all other columns associated with that row.
 
 ```{r}
-# Type your code here
-
+flights_planes <- left_join(flights, planes, by = c("tailnum"))
+flights_planes %>%
+  mutate(age = 2013-year.y) %>%
+  distinct(tailnum, .keep_all = TRUE) %>%
+  slice_max(age, n = 3) %>%
+  select(tailnum, year.y, manufacturer, age)
 ```
 
 ### (b)
@@ -137,8 +141,9 @@ What are the three oldest planes that flew from New York City airports in 2013? 
 Which manufacturer was used the most frequently for flights from New York City in 2013? Report a table with the name of the manufacturer, along with the number of flights using planes made by that manufacturer.
 
 ```{r}
-# Type your code here
-
+flights_planes %>%
+  count(manufacturer) %>%
+  slice_max(n, n = 1)
 ```
 
 ------------------------------------------------------------------------

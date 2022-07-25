@@ -127,11 +127,11 @@ lm_housing <- lm(price ~ bedrooms, data = house_prices)
 get_regression_table(lm_housing)
 ```
 
-- For each one unit of `x` (bedrooms), there is an associated **increase** in our `y` (house prices) of \$127,547.6.
-  - Much more important than intercept
-- When we have a property with 0 bedrooms (i.e., `bedrooms = 0`), the predicted price is $110,315.7.
-  - Usually doesn't make sense in context though
-  
+-   For each one unit of `x` (bedrooms), there is an associated **increase** in our `y` (house prices) of \$127,547.6.
+    -   Much more important than intercept
+-   When we have a property with 0 bedrooms (i.e., `bedrooms = 0`), the predicted price is \$110,315.7.
+    -   Usually doesn't make sense in context though
+
 ### Using this Model for Prediction
 
 ```{r}
@@ -142,9 +142,9 @@ predict_house_price <- function(bedrooms) {
 predict_house_price(33)
 ```
 
-- Exercise caution when extrapolating (e.g., 33 bedrooms is outside the maximum)
-  - Max number of bedrooms in the dataset that was fitted had a maximum number of bedrooms of 11
-  
+-   Exercise caution when extrapolating (e.g., 33 bedrooms is outside the maximum)
+    -   Max number of bedrooms in the dataset that was fitted had a maximum number of bedrooms of 11
+
 ## One Categorical X
 
 ### **New Question**: What is the relationshup between **waterfront view status** of a home?
@@ -155,13 +155,13 @@ lm_housing_waterfront <- lm(price ~ waterfront, data = house_prices)
 get_regression_table(lm_housing_waterfront)
 ```
 
-*Note: We only see `waterfrontTRUE` in the regression table. That is because, when dummy coding, R assigns one level of the `waterfront` variable to be the reference level. Generally, the first alphabetically is the reference level*. 
+*Note: We only see `waterfrontTRUE` in the regression table. That is because, when dummy coding, R assigns one level of the `waterfront` variable to be the reference level. Generally, the first alphabetically is the reference level*.
 
-- Equation: $\hat{price} = 531558.5 + 1130317.5 * waterfrontTRUE$
-- `waterfrontTRUE` is either 0 (false) or 1 (true)
-  - No waterfront: $\hat{price} = 531558.5 + 1130317.5*0$
-  - Waterfront: $\hat{price} - 531558.5 + 1130317.5*1$
-  
+-   Equation: $\hat{price} = 531558.5 + 1130317.5 * waterfrontTRUE$
+-   `waterfrontTRUE` is either 0 (false) or 1 (true)
+    -   No waterfront: $\hat{price} = 531558.5 + 1130317.5*0$
+    -   Waterfront: $\hat{price} - 531558.5 + 1130317.5*1$
+
 ### Exploration of Waterfront and Price
 
 ```{r}
@@ -170,11 +170,12 @@ house_prices %>%
   summarize(mean_price = mean(price))
 ```
 
-- The mean price of `waterfront = FALSE` is the **intercept** of the linear regression
-- The mean price of `waterfront = TRUE` is the **slope** of the linear regression
-  - The slope means that the **difference** between the average price in waterfront and non-waterfront homes is approximately $113017.5 (i.e., `1661876.0 - 531558.5`)
-  
+-   The mean price of `waterfront = FALSE` is the **intercept** of the linear regression
+-   The mean price of `waterfront = TRUE` is the **slope** of the linear regression
+    -   The slope means that the **difference** between the average price in waterfront and non-waterfront homes is approximately \$113017.5 (i.e., `1661876.0 - 531558.5`)
+
 ### **Question: Relationship between `species` and `bill_length_mm`** (non-binary categorical x)
+
 ```{r}
 penguins %>%
   count(species)
@@ -186,18 +187,18 @@ lm_penguin = lm(bill_length_mm ~ species, data = penguins)
 get_regression_table(lm_penguin)
 ```
 
-- Coefficient for chinstraps is 10.042; this tells us the average bill length for chinstrap penguins is **10.042** mm more than Adelie penguins
+-   Coefficient for chinstraps is 10.042; this tells us the average bill length for chinstrap penguins is **10.042** mm more than Adelie penguins
 
 ## Residual Analysis
 
-- A residual is the error from the line
-  - $residual = y - \hat{y}$: the difference between the observed and predicted
-  - Positive residual means the prediction is too low
-  - Negative residual means the prediction is too high
-  
+-   A residual is the error from the line
+    -   $residual = y - \hat{y}$: the difference between the observed and predicted
+    -   Positive residual means the prediction is too low
+    -   Negative residual means the prediction is too high
+
 ```{r}
 mean(abs(get_regression_points(lm_housing)$residual))
 ```
 
-- Uses mean squared error (MSE)
-  - $\frac{1}{n} \sum{(y_i-\hat{y}_i)^2}$
+-   Uses mean squared error (MSE)
+    -   $\frac{1}{n} \sum{(y_i-\hat{y}_i)^2}$
