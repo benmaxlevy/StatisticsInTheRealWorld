@@ -132,10 +132,17 @@ avocado %>%
   filter(duplicated(region) == FALSE) %>%
   slice_max(AveragePrice, n = 3) %>%
   select(region, AveragePrice)
+
+avocado %>%
+  filter(year == 2018) %>%
+  group_by(region) %>%
+  summarize(avg = max(AveragePrice)) %>%
+  arrange(desc(avg)) %>%
+  slice_max(avg, n = 3)
 ```
 
 
-## Exercise 4*
+## Exercise 4
 
 **This exercise is OPTIONAL! Try it if you want extra practice.**
 
@@ -162,12 +169,21 @@ Using `geom_col()`, create a barplot showing the frequency of **the top 25** obj
 
 ```{r}
 bob_ross %>%
-  add_count(object) %>%
-  arrange(desc(n)) %>%
+  count(object) %>%
   select(object, n) %>%
   distinct() %>%
   slice_max(n, n = 25) %>%
   ggplot(aes(x = object, y = n)) +
+  geom_col() +
+  coord_flip()
+
+# alt solution
+
+bob_ross %>%
+  group_by(object) %>%
+  summarize(n = n()) %>%
+  slice_max(n, n = 25) %>%
+  ggplot(aes(x = fct_reorder(object, n), y = n)) +
   geom_col() +
   coord_flip()
 ```
@@ -179,13 +195,9 @@ In which paintings did Bob Ross paint the most objects? Calculate the total numb
 
 ```{r}
 bob_ross %>%
-  add_count(title) -> x
-  x$object <- NULL
-x %>%
   group_by(title) %>%
-  summarize(numberOfObjects = n()) %>%
-  arrange(desc(numberOfObjects)) %>%
-  slice_max(numberOfObjects, n = 3)
+  summarize(N_objects = n()) %>%
+  slice_max(order_by = N_objects, n = 3)
 ```
 
 

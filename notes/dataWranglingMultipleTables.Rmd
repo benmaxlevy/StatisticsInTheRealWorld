@@ -1,0 +1,84 @@
+---
+title: "dataWranglingMultipleTables"
+author: "Ben Levy"
+date: "2022-07-21"
+output: html_document
+---
+
+# Data Wrangling with Multiple Tables
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+## Combining Multiple Tables
+
+### `inner_join()`
+
+- Join two tables together based on a common key between the tables
+- Only keeps rows that have a key match in either table (i.e., if the keys don't match, get outta here)
+  - Thus, use this if you want to only keep rows that have matching keys (i.e., no missing column data after joining)
+
+#### Random Subset of 10 Rows from the `flight` dataset
+
+- Merge airport names and location information to the `flights_sample` dataset
+
+```{r}
+set.seed(12345)
+flights_sample <- flights %>%
+  slice_sample(n = 10) %>%
+  select(month, dep_delay, dest, carrier)
+
+# inner join
+flights_sample %>%
+  inner_join(airports, by = c("dest" = "faa")) -> flights_with_airports
+```
+
+#### Merge airport names and location information to the `flights` dataset
+
+```{r}
+flights %>%
+  inner_join(airports, by = c("dest" = "faa")) -> flights_inner
+```
+
+
+Let's use `setdiff()` to see the differences between the `flight$dest` and `airports$faa` vectors.
+
+```{r}
+setdiff(flights$dest, airports$faa) # see what airports that are in flights$dest that aren't in airports$faa
+```
+
+
+### `full_join()`
+
+- Merging regardless of key matches
+
+```{r}
+flights_full <- flights %>%
+  full_join(airports, by = c("dest" = "faa"))
+
+flights_full %>%
+  na.omit() # removes any row with ANY NA values
+```
+
+
+### `left_join()` and `right_join()`
+
+#### `left_join()`
+
+- Join two tables together, keep ALL rows in the left-hand table, regardless of whether they have a key match in the right-hand table.
+
+```{r}
+flights_sample_left <- flights_sample %>%
+  left_join(airports, by = c("dest" = "faa"))
+```
+
+#### `right_join()`
+
+- Same as `left_join()`, just with the right (i.e., the right table persists, regardless of whether they have a key match in the left-hand table).
+
+```{r}
+flights_sample_right <- flights_sample %>%
+  right_join(airports, by = c("dest" = "faa"))
+```

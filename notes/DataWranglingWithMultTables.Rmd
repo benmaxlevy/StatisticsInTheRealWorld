@@ -1,0 +1,168 @@
+---
+title: "Data Wrangling with Mult Tables"
+author: "William Gokey"
+date: "2022-07-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+
+library(tidyverse)
+library(nycflights13)
+
+
+
+```
+
+
+
+                                    ##joining data sets##
+Three types (main types) of joins 
+
+- *inner*
+
+- *full*
+
+- *left* or *right*
+
+
+
+    ## inner_join()
+
+
+
+First, let's take a random subset of 10 rows from the 'flights' data set:
+
+
+
+```{r}
+
+set.seed(12345)
+flights_sample = flights %>%
+    slice_sample(n = 10) %>%
+    select(month, dep_delay, dest, carrier)
+
+
+
+view(flights_sample)
+
+```
+
+
+**Goal**: Merge the *airport names* (and location information) over to the 'flights_sample' data set.
+
+```{r}
+view(airports)
+```
+
+**inner_join**: join two tables together based on a *common key* between the tables. BUT** we only keep rows that have a key match in *either table*. 
+
+
+```{r}
+
+flights_sample_inner = flights_sample %>%
+    inner_join(airports, by = c("dest" = "faa"))
+
+view(flights_sample_inner)
+
+```
+
+
+```{r}
+flights_inner = flights %>%
+  inner_join(airports, by = c("dest" = "faa"))
+flights_inner
+```
+
+
+Let's use 'setdiff()' to see the differences between the 'flight$dest' and 'airports$faa' vectors
+
+```{r}
+setdiff(flights$dest, airports$faa)
+
+setdiff(airports$faa, flights$dest)
+```
+
+
+
+
+
+    ##left_join()
+
+Join two tables together, keep ALL rows in the left_hand table, regardless of whether they have a key match in the right-hand table
+
+
+```{r}
+
+flights_sample_left = flights_sample %>%
+  left_join(airports, by = c("dest" = "faa"))
+flights_sample_left
+
+
+```
+
+      ##right_join()##
+
+
+```{r}
+
+flights_sample_right = flights_sample %>%
+  right_join(airports, by = c("dest" = "faa"))
+flights_sample_right
+
+
+```
+
+    ##full_join()##
+    
+```{r}
+
+flights_full = flights %>%
+  full_join(airports, by = c("dest" = "faa"))
+
+view(flights_full)
+
+
+```
+    
+
+```{r}
+flights_full %>%
+  na.omit() #removes any row with NA
+
+
+```
+
+
+
+
+
+
+
+
+
