@@ -1,0 +1,164 @@
+---
+title: "multipleLinearRegressions"
+author: "Ben Levy"
+date: "2022-07-26"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(moderndive)
+
+house_prices <- house_prices %>%
+  filter(bedrooms < 33)
+```
+
+# Multiple Regression
+
+New formula: $\hat{y} = b_0 + b_1x_1 + ... + b_nx_n$
+
+$\hat{price} = b_0 + b_1*bedrooms + b_2*waterfrontTRUE$
+
+- The `b` coefficients are all **estimated** from DATA
+- Does this association change when accounting for whether the home has a waterfront view?
+
+### Requirements
+
+At least:
+
+- Numerical `y` (dependent)
+- At ***least*** **TWO** `x` (explanatory) variables
+  - Type doesn't matter (i.e., numerical or categorical)
+
+### EDA
+
+```{r}
+house_prices %>%
+  ggplot(aes(x = bedrooms, y = price, color = waterfront)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+### Interaction Model
+
+When we perform EDA (e.g., scatterplot), and it seems that the slopes are different, we might consider including an interaction term in the model.
+
+*Note: adding a crossed feature (i.e., interaction term) is not always necessary*
+
+```{r}
+lm_price_interaction <- lm(price ~ bedrooms + waterfront + bedrooms*waterfront, data = house_prices)
+
+get_regression_table(lm_price_interaction)
+```
+
+Equation from this LM: $\hat{price} = 114143.5 + 123862.3*bedrooms - 236296.0*waterfrontTRUE + 416652.0*(bedrooms*waterfrontTRUE)$
+
+- The first two terms/coefficients correspond to the intercept and slope for **non-waterfront** homes
+- The latter two correspond to the **difference in intercept** and **difference in slope**, respectively, when comparing non-waterfront homes to waterfront homes.
+  - Offsets from non-waterfront homes
+- The interaction term tells us that the slope for *waterfront* homes is actually more than *triple* the slope for non-waterfront homes (123862 versus 123862 + 416652)
+
+### Parallel Slope Models
+
+#### Assumptions
+
+- The slopes corresponding to any categorical `x` variable are **parallel**
+- Basically, just a multiple regression model *without* the interaction term
+
+#### Visualizing using `geom_parallel_slopes()`
+
+```{r}
+house_prices %>%
+  ggplot(aes(x = bedrooms, y = price, color = waterfront)) +
+  geom_point() +
+  geom_parallel_slopes()
+```
+
+```{r}
+lm_price_parallel <- lm(price ~ bedrooms + waterfront, data = house_prices)
+
+get_regression_table(lm_price_interaction)
+```
+
+- The coefficient of `bedrooms`
+  - While keeping `waterfrontTRUE` constant, each additional bedroom is associated with a $`128265.22` increase in house price, on average.
+  
+#### Example using Penguin Data
+
+```{r}
+penguins = read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-28/penguins.csv')
+```
+
+```{r}
+penguins %>%
+  ggplot(aes(x = bill_length_mm, y = bill_depth_mm, color = species)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+## Two (or more) Numerical X Variables
+
+Instead of considering `waterfront` as an X variable, let's model house price as a function of
+
+1. Number of bedrooms per home
+2. size of the home (`sqft_living`)
+
+```{r}
+house_prices %>%
+  ggplot(aes(x = sqft_living, y = price)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+- For larger homes, the error (or loss; $y-\hat{y}$) increases
+- Caution: variance in residuals is not constant; it increases as `x` increases. Exercise caution when using a linear regression model when we observe this.
+
+```{r}
+lm_multiple <- lm(price ~ bedrooms + sqft_living, data = house_prices)
+get_regression_table(lm_multiple)
+```
+
+*Note: it may be tempting to conclude that there is now a negative association between number of bedrooms and price, but this is merely a result of accounting for the `sqft_living` variable*
+
+Interpretation of the coefficient for bedrooms:
+
+- After holding the size of the home fixed, for each addition bedroom, there is an associated decrease in the price of a home by about $62k.
+  - Makes sense because as a home has more and more bedrooms, they get smaller, given the `sqft_living` is constant
+  
+## Model Selection
+
+Going to use the `MA_schools` dataset from the `moderndive` package to model average math SAT score as a function of several variables
+
+Model of SAT math score: `perc_disadvan` and `size`
+
+### Task
+
+- Perform EDA
+  - Graphs/stats
+- Build an *interaction* and *parallel slopes model*
+
+```{r}
+MA_schools %>%
+  ggplot(aes(x = perc_disadvan, y = average_sat_math, color = size)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+interaction_model <- lm(average_sat_math ~ perc_disadvan + perc_disadvan*size, data = MA_schools)
+get_regression_table(interaction_model)
+```
+
+The two interaction terms do not add much to the original slope for small schools.
+
+```{r}
+parellel_model <- lm(average_sat_math ~ perc_disadvan + size, data = MA_schools)
+get_regression_table(parallel_model)
+```
+
+```{r}
+schools_simple_model <- lm(average_sat_math ~ perc_disadvan, data = MA_schools)
+get_regression_table(schools_simple_model)
+```
+
+The slope for `perc_disadvan` barely changes; a parallel slopes model is not super different from a simple linear regression.

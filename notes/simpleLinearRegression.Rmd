@@ -147,7 +147,7 @@ predict_house_price(33)
 
 ## One Categorical X
 
-### **New Question**: What is the relationshup between **waterfront view status** of a home?
+### **New Question**: What is the relationship between **waterfront view status** of a home?
 
 ```{r}
 lm_housing_waterfront <- lm(price ~ waterfront, data = house_prices)

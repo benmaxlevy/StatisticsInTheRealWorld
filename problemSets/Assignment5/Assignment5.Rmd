@@ -1,0 +1,168 @@
+---
+title: 'CEMA 0907: Problem Set 5'
+author: 'Ben Levy'
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+```{r, warning = FALSE, message = FALSE}
+# Load any R Packages you may need, and install any that you haven't installed yet
+library(tidyverse)
+library(moderndive)
+library(ISLR)
+```
+
+
+## Exercise 1
+This exercise uses simulated data and is based on a series of examples from [Lubke et al. (2020)](https://www.tandfonline.com/doi/full/10.1080/10691898.2020.1752859). The scope of the article was to illustrate several examples that used linear regression to show the effects of *lurking variables* and when one should or should not adjust for covariates.
+
+In one simulated example, the variables are: `intelligence`, `learning.time`, and `test.score`. 
+
+Load the simulated data below (don't worry about the code, but you can view the `data_a` dataset!):
+
+```{r}
+set.seed(391) # Reproducibility
+n <- 1000 # Sample Size
+
+intelligence <- rnorm(n, mean = 100, sd = 15)
+learning.time <- 200 - intelligence + rnorm(n)
+test.score <- 0.5 * intelligence + 0.1 * learning.time + rnorm(n)
+
+data_a <- data.frame(
+  cbind(intelligence, learning.time, test.score)
+)
+```
+
+Fit two linear regression models: (i) `test.score ~ learning.time`, and (ii) `test.score ~ learning.time + intelligence`. Explain how adjusting for `intelligence` affects the magnitude of the relationship between `test.score` and `learning.time`. 
+
+[Hint: The results of model (i) are counterintuitive!]
+
+```{r}
+lm_not_intelligent <- lm(test.score ~ learning.time, data = data_a)
+lm_intelligent <- lm(test.score ~ learning.time + intelligence, data = data_a)
+
+get_regression_table(lm_not_intelligent)
+get_regression_table(lm_intelligent)
+```
+
+Adjusting for `intelligence` makes the association between `test.score` and `learning.time` positive, whereas in (i), it is negatively. (i)'s results are, indeed, quite counter-intuitive, and thus, a parallel slopes model does seem, at the least, more fitting than a simple linear regression.
+
+## Exercise 2
+
+In this exercise, we will use horror movie data from Kaggle and [Tidy Tuesday](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-22) to predict IMDb rating, via linear regression. 
+
+```{r}
+horror_movies_raw = read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-10-22/horror_movies.csv")
+```
+
+### (a)
+I used the pipeline below to clean the dataset up a bit, which will make it easier to analyze later on. This pipeline contains some new functions we haven't used in class yet. Based on the context and the final output, comment on what you think each line of code accomplishes. 
+
+Some general advice for this part:
+
+- Compare the starting object (`horror_movies_raw`) with the final result (`horror_movies`). 
+- Run the pipeline in chunks to see what each step adds. For example, `horror_movies_raw %>% extract(...)`, then `horror_movies_raw %>% extract(...) %>% distinct(...)`, ...
+
+```{r}
+# Ignore the warning messages that appear when you run this!
+horror_movies = horror_movies_raw %>%
+  extract(title, "year", "\\((\\d\\d\\d\\d)\\)$", remove = FALSE, convert = TRUE)  %>%
+  distinct(title, .keep_all = TRUE) %>%
+  separate(col = genres, into = c("genre1", "genre2", "genre3", "genre4", "genre5"), sep = "\\| ") %>%
+  filter(year >= 2012) %>%
+  mutate(budget = parse_number(budget), 
+         movie_run_time = parse_number(movie_run_time), 
+         year = factor(year))
+```
+
+**USE THIS DATASET (`horror_movies`) FOR THE REMAINING TWO PARTS!**
+Format: (Line) <number of line>
+1. assigning the variable `horror_movies` to the value of the following pipeline
+2. creating the `year` column using some RegEx expression that captures four consecutive digits from the `title` column, which has the year of publication
+3. remove all non-unique rows based on their `title` (keep them in the original dataset; only "cache" the changes)
+4. kind of like Python's (and JS's) `split()` method that makes an list (array) based on a delineation character (in this case, it is "| ", an odd choice)
+5. SQL: `SELECT * FROM <dataset> WHERE year >= 2012`
+6. Adds three rows
+  - The first two simply convert non-numbers (strings) to numbers
+  - The last column makes year a categorical variable rather than a numerical (as it is a number before this wrangling step)
+
+### (b)
+Is there an association between `movie_run_time` and `review_rating`? Create an appropriate visual to check. 
+
+```{r}
+horror_movies %>%
+  ggplot(aes(x = movie_run_time, y = review_rating)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+As per this linear model, there is no **strong** association between these two variables (correlation coefficient of maybe <= 0.1).
+
+### (c)
+Fit a **linear regression model** that predicts `review_rating` as a function of `movie_run_time`, `budget`, and `year` (i.e., `review_rating ~ movie_run_time + budget + year`). Using the estimated coefficients from the model output, what is the association between `movie_run_time` and `review_rating`?
+
+```{r}
+get_regression_table(lm(review_rating ~ movie_run_time + budget + year, data = horror_movies))
+```
+
+The association between `movie_run_time` and `review_rating` is slightly positive.
+
+## Exercise 3
+In this exercise, we will use the `Credit` dataset from the `{ISLR}` package to see what factors are associated with one's credit card balance (i.e., debt). Run the following code to clean the data a bit:
+
+```{r}
+Credit = Credit %>%
+  mutate(Income = Income, # income measured in 1000s of dollars
+         Limit_cat = case_when(
+           (Limit >= 0 & Limit <= 3088) ~ "low",
+           (Limit > 3088 & Limit <= 4622) ~ "med-low", 
+           (Limit > 4622 & Limit <= 5873) ~ "med-high", 
+           (Limit > 5873) ~ "high"
+         ))
+# View(Credit)
+```
+
+Fit a regression model using `Balance` as the response and `Income` (measured in 1000s of dollars) and `Limit_cat` as the explanatory variables, determine whether an *interaction model* or a *parallel slopes model* is more appropriate. Explain your reasoning by:
+
+(i) using appropriate visualizations, and
+
+(ii) interpreting relevant regression coefficients in each model (i.e., fit both an interaction and parallel slopes model and analyze what the extra coefficient means in the interaction model)
+
+```{r}
+# parallel slopes model - table-wise
+parallel_slopes_model <- lm(Balance ~ Income + Limit_cat, data = Credit)
+get_regression_table(parallel_slopes_model)
+
+# interaction model - table-wise
+interaction_slopes_model <- lm(Balance ~ Income + Income*Limit_cat, data = Credit)
+get_regression_table(interaction_slopes_model)
+```
+
+
+```{r}
+# parallel slopes model - graphical
+Credit %>%
+  ggplot(aes(x = Income, y = Balance, color = Limit_cat)) +
+  geom_point() +
+  geom_parallel_slopes()
+
+# interaction model - graphical
+Credit %>%
+  ggplot(aes(x = Income, y = Balance, color = Limit_cat)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+The interaction model seems to be more accurate of the associations between `Income` and `Balance`. We can see this within, first, the visual representations. Specifically,
+the the regressions in the second scatterplot show much more correlation with respect to each color, which is not shown as much within the first scatterplot's regressions.
+
+Looking at the specific coefficients, we can see that in the parallel slopes model, each `Limit_cat` do offset the y-intercept by values != 0, as indicated by the confidence intervals. On the other hand, in the interaction model, we can see that the `Limit_cat` levels do offset the y-intercept by values != 0, but the slope is also offset by values != 0 except in one case (based on CIs), in addition to the `Income` coefficient being positive instead of negative.
+
+* * *
+
+## All done!
+
+Knit the completed R Markdown file as a HTML document (click the "Knit" button at the top of the editor window) and upload it to Canvas.

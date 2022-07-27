@@ -47,7 +47,7 @@ balance_fit <- lm(Balance ~ Income, data = Credit)
 get_regression_table(balance_fit)
 ```
 
-For every increase (one unit) in income, income increases by 6.048 units. Thus, a positive correlation can be observed from these data.
+For every increase (one unit) in income, balance increases by 6.048 units. Thus, a positive correlation can be observed from these data.
 
 ## Exercise 2
 
