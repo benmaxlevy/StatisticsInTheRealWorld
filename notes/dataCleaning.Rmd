@@ -1,0 +1,122 @@
+---
+title: "Data Cleaning"
+output: html_notebook
+---
+
+# Data Cleaning
+
+```{r}
+library(tidyverse)
+library(fivethirtyeight)
+
+spotify_songs <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-01-21/spotify_songs.csv")
+bush_approval_untidy <- read_csv("./bush_approval.csv")
+```
+
+## Tidy Data
+
+```{r}
+bush_approval <- bush_approval_untidy %>%
+  select(date, Republican, Independent, Democrat)
+```
+
+Instead of this format, we want a dataset with the following three columns: date, party, approval
+
+```{r}
+bush_approval <- bush_approval %>%
+  pivot_longer(!date, names_to = "party", values_to = "approval")
+```
+
+Visualizing Tidy Data:
+
+```{r}
+bush_approval %>%
+  ggplot(aes(x = date, y = approval, color = party)) +
+  geom_line(size = 20)
+```
+
+Visualizing Un-Tidy Data:
+
+```{r}
+bush_approval_untidy %>%
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = Republican), color = "lightblue3", size = 1.5) +
+  geom_line(aes(y = Democrat), color = "chartreuse", size = 1.5) +
+  geom_line(aes(y = Independent), color = "lightpink2", size = 1.5)
+```
+
+## Data Cleaning Tips and Tricks
+
+### `count()`
+
+```{r}
+video_games <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-07-30/video_games.csv")
+```
+
+#### Questions
+
+- What developers appeared the most frequently?
+  - Choice of Games
+- How many developers are there?
+  - 16,753 (number of rows in DF)
+
+```{r}
+video_games %>%
+  count(developer, sort = TRUE)
+```
+
+Suppose we have a categorical variable with way too many levels to count or use (e.g., `publisher` or `developer`). We can use the function `fct_lump()` less frequently occurring levels in a categorical variable.
+
+```{r}
+video_games_count <- video_games %>%
+  mutate(publisher_lump = fct_lump(publisher, n = 5)) %>%
+  count(publisher_lump, sort = TRUE) %>%
+  filter(publisher_lump != "Other") 
+video_games_count %>%
+  ggplot(aes(x = publisher_lump, y = n)) +
+    geom_col(fill = "chartreuse") +
+    coord_flip()
+```
+
+If we want to custom-order the levels of `publisher_lump`, use `fct_relevel()` within a `mutate()`.
+
+```{r}
+video_games_count %>%
+  mutate(publisher_relevel = fct_relevel(publisher_lump, "SEGA", "Strategy First", "Big Fish Games", "Square Enix", "Ubisoft")) %>%
+  ggplot(aes(x = publisher_relevel, y = n)) +
+  geom_col() +
+  coord_flip()
+```
+
+## `separate()`
+
+This function separates one column into multiple columns.
+
+```{r}
+nyc_restaurants <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-12-11/nyc_restaurants.csv")
+```
+
+Split `inspection_type` into two columns.
+
+```{r}
+nyc_restaurants_sep <- nyc_restaurants %>%
+  separate(col = inspection_type, into = c("inspection_program", "inspection_type"), sep = "/")
+
+nyc_restaurants_sep %>%
+  count(inspection_type, sort = TRUE)
+```
+
+Opposite of this is `unite()`.
+
+## Filtering using Text Expressions
+
+```{r}
+nyc_restaurants %>%
+  mutate(roach_violation = str_detect(string = violation_description, pattern = "roach")) -> nyc_restaurants
+
+nyc_restaurants %>%
+  filter(roach_violation = TRUE) %>%
+  ggplot(aes(x = fct_infreq(boro))) +
+  geom_bar()
+```
+

@@ -1,0 +1,167 @@
+---
+title: "samplingDistributions"
+author: "Ben Levy"
+date: "2022-07-28"
+output: html_document
+---
+
+# Sampling Distributions
+
+$\hat{p} = sample proportion$
+  - Estimates $p$, the population proportion
+  - Used for categorical data
+
+$\bar{x} = sample mean$
+  - Used for numerical data
+  - Estimates $M$, the population mean
+  
+```{r}
+library(tidyverse)
+library(moderndive)
+```
+
+# We will use *computer simulations* to *virtually sample* from a *virtual population*.
+
+- Our *virtual population* will be the `bowl` dataset from moderndive.
+
+```{r}
+bowl
+```
+
+Our "population" consists of 2400 balls, which are either *either* red or white.
+
+**Goal**: **Estimate** the population proportion of red balls ($\hat{p}$)
+
+```{r}
+virtual_sample <- rep_sample_n(bowl, size = 50)
+```
+
+Calculate sample proportion of red balls
+
+```{r}
+virtual_sample %>%
+  summarize(prop = sum(color == "red")/n())
+```
+
+Calculate actual proportion of red balls ($p$)
+
+```{r}
+bowl %>%
+  summarize(prop = sum(color == "red")/n())
+```
+
+Take 30 samples of size n = 50 from the `bowl` dataset:
+
+```{r}
+virtual_samples_30 <- rep_sample_n(bowl, size = 50, reps = 30)
+
+virtual_prop_red <- virtual_samples_30 %>%
+  group_by(replicate) %>%
+  summarize(prop = sum(color == "red")/n())
+```
+
+```{r}
+virtual_prop_red %>%
+  ggplot(aes(x = prop)) +
+  geom_histogram(binwidth = 0.05, color = "chartreuse")
+```
+
+Now, let's take 1,000 samples instead of 30!
+
+```{r}
+virtual_samples_1000 <- rep_sample_n(bowl, size = 50, reps = 1000)
+
+virtual_prop_red_1000 <- virtual_samples_1000 %>%
+  group_by(replicate) %>%
+  summarize(prop = sum(color == "red")/n())
+
+virtual_prop_red_1000 %>%
+  ggplot(aes(x = prop)) +
+  geom_histogram(binwidth = 0.05, color = "chartreuse")
+```
+
+So far, we've only been tweaking the *rep_count*.
+
+```{r}
+virtual_samples_100 <- rep_sample_n(bowl, size = 100, reps = 1000)
+
+virtual_prop_red_100 <- virtual_samples_100 %>%
+  group_by(replicate) %>%
+  summarize(prop = sum(color == "red")/n())
+
+virtual_prop_red_100 %>%
+  ggplot(aes(x = prop)) +
+  geom_histogram(binwidth = 0.05, color = "chartreuse")
+```
+
+- A sampling distribution is a distribution of sample statistics
+
+Let's compare the sampling distributions we constructed with sample sizes of n = 50 and n = 100.
+
+*Note: when we increased the sample size from 50 to 100, the shape and center stayed roughly the same (symmetric, center ~0.4). The spread DID decreased largely when increasing the sample size per rep*
+
+```{r}
+virtual_samples_10 <- rep_sample_n(bowl, size = 10, reps = 1000)
+
+virtual_prop_red_10 <- virtual_samples_10 %>%
+  group_by(replicate) %>%
+  summarize(prop = sum(color == "red")/n())
+```
+
+```{r}
+virtual_prop_red_10 %>%
+  ggplot(aes(x = prop)) +
+  geom_histogram(binwidth = 0.1, color = "chartreuse")
+```
+
+## Central Limit Theroem (for $\hat{p}$ )
+
+- If sample is independent and sufficiently large, then $\hat{p} \dot\sim Normal(p, \sqrt{\frac{p(1-p)}{n}})$
+  - The sampling distribution of $\hat{p}$ is approximately normal 
+  - Tidle with dot under it is "approximately distributed as"
+  - $p$ = mean of the population
+  - SD = $\sqrt{\frac{p(1-p)}{n}}$
+  
+Let's see how well our simulations followed the CLT
+
+```{r}
+mean(virtual_prop_red_10$prop)
+sd(virtual_prop_red_10$prop)
+
+# CLT says the mean *should* be 0.375 (p)
+sqrt(0.375*(1-0.375)/10)
+```
+
+### CLT for Means
+
+Now, let's perform simulation studies for estimated the *pop mean* in stead of the *pop proportion*
+
+Consider `pennies` as our population of 800 pennies.
+
+Goal: use sample data to *estimate* the population mean `age_in_2011`.
+
+```{r}
+virtual_pennies_10 <- rep_sample_n(pennies, size = 50, reps = 1000)
+virtual_pennies_10 <- virtual_pennies_10 %>%
+  group_by(replicate) %>%
+  summarize(mean_age = mean(age_in_2011))
+
+virtual_pennies_10 %>%
+  ggplot(aes(x = mean_age)) +
+  geom_histogram(color = "white", binwidth = 2)
+```
+
+True mean:
+
+```{r}
+mean(pennies$age_in_2011)
+```
+
+## Central Limit Theroem (for $\bar{x}$ )
+
+- If sample is independent and sufficiently large, then $\bar{x} \dot\sim Normal(\mu, \frac{\sigma}{\sqrt{n}})$
+  - The sampling distribution of $\hat{p}$ is approximately normal 
+  - Tidle with dot under it is "approximately distributed as"
+  - $p$ = mean of the population
+  - SD = $\sqrt{\frac{p(1-p)}{n}}$
+  

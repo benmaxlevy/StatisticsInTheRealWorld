@@ -159,7 +159,7 @@ Credit %>%
 The interaction model seems to be more accurate of the associations between `Income` and `Balance`. We can see this within, first, the visual representations. Specifically,
 the the regressions in the second scatterplot show much more correlation with respect to each color, which is not shown as much within the first scatterplot's regressions.
 
-Looking at the specific coefficients, we can see that in the parallel slopes model, each `Limit_cat` do offset the y-intercept by values != 0, as indicated by the confidence intervals. On the other hand, in the interaction model, we can see that the `Limit_cat` levels do offset the y-intercept by values != 0, but the slope is also offset by values != 0 except in one case (based on CIs), in addition to the `Income` coefficient being positive instead of negative.
+Looking at the specific coefficients, we can see that in the parallel slopes model, each `Limit_cat` do offset the y-intercept by values != 0, as indicated by the confidence intervals. On the other hand, in the interaction model, we can see that the `Limit_cat` levels do offset the slope by values != 0, in addition to the `Income` coefficient being positive instead of negative.
 
 * * *
 
