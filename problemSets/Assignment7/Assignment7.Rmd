@@ -1,0 +1,126 @@
+---
+title: 'CEMA 0907: Problem Set 7'
+author: 'TYPE YOUR NAME HERE'
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+```{r, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(moderndive)
+library(infer)
+library(NHANES) # Install this!
+```
+
+
+## Exercise 1
+
+The code below was used to perform a hypothesis test for the *Mythbusters* example from the *ModernDive* text. It aimed to answer the question, "Is there a significant difference between the *proportion* of individuals who yawned when in a room with *someone who yawned*, and the *proportion* of individuals who yawned when in a room with *someone who did not yawn*?" (In other words, "Is yawning contagious?")
+
+Explain what each step in the pipeline accomplishes. [Hint: Use `?` followed by any of these functions (e.g., `?specify`) if you get stuck!]
+
+```{r}
+mythbusters_yawn %>%
+  specify(response = yawn, explanatory = group, success = "yes") %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in props", order = c("seed", "control")) %>%
+  get_p_value(obs_stat = 0.0441, direction = "greater")
+```
+
+**TYPE YOUR ANSWER HERE**
+
+
+## Exercise 2
+Average income varies from one region of the country to another, and it often reflects both lifestyles and regional living expenses. Suppose a new graduate is considering a job in two locations, Cleveland, OH and Sacramento, CA, and they want to see whether the average income in one of these cities is higher than the other. Tbey would like to conduct a hypothesis test based on two randomly selected samples from the 2000 Census.
+
+The data are located in `cle_sac`, which you can load by running the code below. 
+
+```{r}
+cle_sac = read.delim("https://moderndive.com/data/cleSac.txt") %>%
+  rename(metro_area = Metropolitan_area_Detailed,
+         income = Total_personal_income) %>%
+  na.omit()
+```
+
+```{r, eval = FALSE}
+View(cle_sac)
+```
+
+### (a)
+State the null and alternative hypotheses for a test of whether the average income is different between Cleveland and Sacramento. 
+
+**TYPE YOUR ANSWER HERE**
+
+### (b)
+Construct side-by-side boxplots or strip plots of income for the two cities. What does this suggest about the difference in the average income?
+
+```{r}
+# Type your code here
+
+```
+
+**TYPE YOUR ANSWER HERE**
+
+### (c)
+Calculate the *difference in the average income* between the two cities. Call this average `avg_diff`. 
+
+```{r}
+# Type your code here
+
+```
+
+### (d)
+Conduct the hypothesis test using an `infer` pipeline. The code below will get you started. State the P-value (use `get_p_value()`) and the conclusion of the test. 
+
+```{r}
+# Type your code here
+```
+
+**TYPE YOUR ANSWER HERE**
+
+
+## Exercise 3
+
+The National Health and Nutrition Examination Survey (NHANES) is a program of studies designed to assess the health and nutritional status of adults and children in the United States. The `NHANES` dataset from the `NHANES` package contains a sample of 10,000 individuals from the 2009-2012 iteration of the NHANES. 
+
+```{r, eval = FALSE}
+View(NHANES)
+?NHANES
+```
+
+First, let's downsample a bit so the code runs faster...
+
+```{r}
+NHANES_sample = NHANES %>%
+  slice_sample(n = 1500)
+```
+
+Using `NHANES_sample`, perform a hypothesis test to see if there is a significant difference in the proportion of individuals *working* (i.e., `success = "Working"`) for individuals *with* diabetes and individuals *without* diabetes. Use the code below to remove respondents who were "looking" for a job:
+
+```{r}
+NHANES_sample = NHANES_sample %>%
+  filter(Work != "Looking")
+```
+
+In performing the hypothesis test, state the null and alternative hypotheses, the *observed difference in proportions*, the p-value, and conclusion for the test. 
+
+```{r}
+# Type your code here
+
+```
+
+**TYPE YOUR ANSWER HERE**
+
+
+
+
+
+* * *
+
+## All done!
+
+Knit the completed R Markdown file as a HTML document (click the "Knit" button at the top of the editor window) and upload it to Canvas.

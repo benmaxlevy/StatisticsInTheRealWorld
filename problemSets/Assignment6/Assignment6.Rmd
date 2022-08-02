@@ -1,0 +1,169 @@
+---
+title: 'CEMA 0907: Problem Set 6'
+author: 'TYPE YOUR NAME HERE'
+output: 
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
+```{r, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(moderndive)
+library(infer)
+```
+
+## Exercise 1
+The `house_prices` dataset in the `moderndive` R package contains information on the 21,613 houses sold in King County, Washington between May 2014 and May 2015. Let's treat this as a population of interest. 
+
+### (a)
+Calculate the population mean and standard deviation housing price.
+
+```{r}
+mean(house_prices$price)
+sd(house_prices$price)
+
+```
+
+### (b) 
+Using the `rep_sample_n()` function, take 15 samples each of size 50 houses from the population and assign this to the object `samples_30`. Calculate the mean housing price for each sample. 
+
+```{r}
+samples_30 <- rep_sample_n(tbl = house_prices, size = 50, reps = 15)
+
+samples_30 %>%
+    group_by(replicate) %>%
+    summarize(mean_price = mean(price))
+```
+
+### (c)
+Explain why the sample means obtained in part (b) are not all the same. Explain why these sample means are different from the population mean obtained in part (a).  
+
+First, it is important to note the population mean: 540088.1 USD. When it pertains to the first objective of this problem, different houses are being considered for each repetition (considering that `rep_sample_n` has its `replace` parameter set to `FALSE` by default). When considering the second objective of this problem, the reason is because each "rep" only considers 50 samples, not the entire dataset. Thus, it is a somewhat limited outlook on the mean of the population ($\bar{x}$).
+
+### (d)
+Why couldn’t we study the effects of sampling variation by taking a single sample from the population? Why did we need to take more than one sample?
+
+We couldn't do this because taking only one sample doesn't allow for one to compare to non-existent other samples.
+
+### (e)
+Repeat part (b), except take 1,000 samples each of size 50 instead and assign this to the object `samples_1000`. Calculate the 1,000 sample means and store this in the object `means_1000`. Construct a histogram of the 1,000 sample means and describe the shape, center, and spread of the distribution. 
+
+```{r}
+options(scipen = 999)
+
+samples_1000 <- rep_sample_n(tbl = house_prices, reps = 1000, size = 50)
+
+means_1000 <- samples_1000 %>%
+    group_by(replicate) %>%
+    summarize(mean_price = mean(price))
+
+means_1000 %>%
+    ggplot(aes(x = mean_price)) +
+    geom_histogram()
+```
+
+This is essentially a normal distribution, though it is very slightly right-skewed (basically a realistic Gaussian distribution). The center is between 500000 USD and 600000 USD.
+
+### (f) 
+Calculate the mean and standard deviation of `means_1000`. Explain how these two values compare with those calculated in part (a). 
+
+```{r}
+mean(means_1000$mean_price)
+sd(means_1000$mean_price)
+```
+(a)
+    [1] 540088.1
+    [1] 367127.2
+
+While the means are quite inline (off by about 2000 USD), the standard deviations are quite off (~300000 USD). This may be explained that this SD is of means, while the (a) SD is not.
+
+## Exercise 2
+
+Old Faithful is is a geyser in Yellowstone National Park in Wyoming. The `faithful` dataset (included in base R) includes durations of 272 consecutive eruptions (i.e., `waiting` time in between eruptions). 
+
+### (a) 
+Construct a 95% bootstrap confidence interval for the `median` waiting time between Old Faithful eruptions using the percentile method. Interpret this interval in context. 
+
+```{r}
+sample <- rep_sample_n(tbl = faithful, size = 50, reps = 1, replace = TRUE)
+
+sample %>%
+    specify(response = waiting) %>%
+    generate(reps = 1000, type = "bootstrap") %>%
+    calculate(stat = "median") %>%
+    get_ci(level = 0.95, type = "percentile")
+```
+
+With 95% confidence, the amount of time between eruptions is between 66 and 79 units (minutes?).
+
+### (b)
+Based on your answer in part (a), would you expect the median waiting time between *all* Old Faithful eruptions to be greater than 82 minutes? Explain. 
+
+I would find this somewhat surprising because it is within the upper 2.5% of the normal distribution (i.e., outside the 95% confidence "zone").
+
+## Exercise 3
+
+The code below loads a small dataset of waiting times for a sample of ten automobile oil changes. 
+
+```{r}
+oil = data.frame(
+  times = c(104, 102, 35, 911, 56, 325, 7, 9, 179, 59)
+  )
+```
+
+Is the *mean* the most effective representation of a "typical" waiting time in this dataset? 
+
+- Explain why or why not. 
+
+- What metric *might* be more effective here? Obtain a 95% bootstrap confidence interval for *that* metric. 
+
+```{r}
+oil %>%
+    specify(response = times) %>%
+    generate(reps = 1000, type = "bootstrap") %>%
+    calculate(stat = "median") %>%
+    get_ci(type = "percentile")
+
+```
+
+- Most certainly not. This is because there are two major outliers (325 and 911), which would throw a mean off drastically. On the other hand, medians are somewhat resistant to outliers because they are simply the middle number (or average of the middle numbers) when the dataset is ordered.
+- [34, 214.5]
+
+## Exercise 4
+
+A poll from just before a *totally real* election showed presidential candidate, *Moose*, leading other parties' presidential candidates with 43% among 1,000 likely voters. *Run the code below to load the data*:
+
+```{r}
+poll_data = 
+  data.frame(
+    candidate = c(rep("Moose", 430), rep("Other", 570))
+  )
+```
+
+### (a) 
+Construct a 95% bootstrap confidence interval for the proportion of voters in the election who will vote *Moose* for president. Interpret the interval in context. 
+
+```{r}
+set.seed(12)
+
+poll_data %>%
+    specify(response = candidate, success = "Moose") %>%
+    generate(reps = 1000, type = "bootstrap") %>%
+    calculate(stat = "prop") %>%
+    get_ci()
+```
+
+Between 40% and 45.9025% of people vote for Moose.
+
+### (b)
+A competing presidential candidate, *Cannoli*, received 42% of the vote in that same poll of 1,000 likely voters. This pollster was criticized for the following claim they made in light of the poll results: *Moose is statistically (significantly) ahead of Cannoli*. Explain why this claim is incorrect.
+
+This claim is incorrect because the lower CI is less than the percent of votes that *Cannoli* received. Thus, this claim is not always correct (though, it may be correct if given $p$).
+
+* * *
+
+## All done!
+
+Knit the completed R Markdown file as a HTML document (click the "Knit" button at the top of the editor window) and upload it to Canvas.

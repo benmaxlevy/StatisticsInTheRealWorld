@@ -1,0 +1,135 @@
+---
+title: "Confidence Intervals"
+author: "Ben Levy"
+date: "2022-08-01"
+output: html_document
+---
+
+```{r}
+library(moderndive)
+library(tidyverse)
+library(infer)
+```
+
+# Bootstrapping
+
+EDA of `pennies_sample`
+
+- n = 50 pennies
+- Goal: estimate the average age of all US pennies (measured in 2019)
+
+```{r}
+pennies_sample %>%
+    ggplot(aes(x = year)) +
+    geom_histogram(fill = "chartreuse", color = "coral", binwidth = 3)
+```
+
+- We are assuming that this sample (n = 50) is representative of all US pennies
+
+```{r}
+summary(pennies_sample$year)
+x_bar <- mean(pennies_sample$year)
+```
+
+- **Key**: Understanding the *variability* in our sample mean
+
+## Bootstrapping Rules
+    - Must be done with replacement sampling from our **original sample**
+    - Bootstrapped sample is the same size as the **original sample**
+    
+```{r}
+bootstrap_sample1 <- rep_sample_n(pennies_sample, size = 50, reps = 1, replace = TRUE)
+
+bootstrap_sample1 %>%
+    ggplot(aes(x = year)) +
+    geom_histogram(binwidth = 3)
+
+# bootstrap statistic
+mean(bootstrap_sample1$year)
+```
+
+- If repeating this, the *bootstrap distribution* will be centered around the sample mean.
+
+- The bootstrap procedure works as if our sample (i.e., many copies of our sample) were the population
+
+## Bootstrapping with `infer`
+
+```{r}
+pennies_sample %>%
+    specify(response = year) %>%
+    generate(reps = 1000, type = "bootstrap") %>%
+    calculate(stat = "mean") %>%
+    visualize()
+```
+
+## Confidence Intervals
+
+Confidence level determines how wide the interval is.
+
+Common intervals: 90%, **95%**, 98%, 99%
+
+Using the percentile method to obtain confidence intervals
+
+- Involves finding the *quantiles* for the middle 95% (or 90% or 99%) of the bootstrap distribution
+
+```{r}
+pennies_sample %>%
+    specify(response = year) %>%
+    generate(reps = 1000, type = "bootstrap") %>%
+    calculate(stat = "mean") %>%
+    get_ci(level = 0.95) -> percentile_ci
+```
+
+We are 95% confidence that the population mean penny year is between 1991.2 and 1999.8.
+
+```{r}
+pennies_sample %>% 
+  specify(response = year) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "mean") %>%
+  visualize()  + 
+  shade_ci(endpoints = percentile_ci, 
+           color = "hotpink", fill = "chartreuse")
+```
+
+## Interpreting CIs
+
+When we say we are "95% confident," what does that actually mean?
+
+To answer this, let's calculate a confidence interval for a **proportion** rather than a *mean*.
+
+- Treat the `bowl` dataset as our *population*.
+    - This means we know what the population proportion is ($p_{red}$ = 0.375)
+- Use the sample size of n = 90, and calculate a CI for the proportion of red
+
+```{r}
+bowl %>%
+    slice_sample(n = 90) %>%
+    specify(response = color, success = "red") %>% # need to specify a success option when calculating a proportion
+    generate(reps = 1000, type = "bootstrap") %>%
+    calculate(stat = "prop") %>%
+    get_ci(type = "percentile")
+```
+
+CI: (0.310, 0.511): this includes the true $p$.
+
+If we were to repeat this procedure over and over again with different samples, approximately 95% of those samples would yield a 95% CI that covers the true parameter.
+
+## Width of CI
+
+Two ways to impact the width of CI:
+
+- Change the confidence level
+    - 99% is wider than 98%
+- Sample size
+    - Narrower CIs when increasing sample size
+    
+## Theory-Based CI using the CLT
+
+- Relies on the conditions that our sample is large neough, the data come from a normal distribution, and that our sample was collected at random.
+
+```{r}
+mean(pennies_sample$year) - 1.96*(sd(pennies_sample$year)/sqrt(50))
+mean(pennies_sample$year) + 1.96*(sd(pennies_sample$year)/sqrt(50))
+```
+
