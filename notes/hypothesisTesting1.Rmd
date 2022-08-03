@@ -1,0 +1,189 @@
+---
+ title: "Hypothesis Testing Part 1"
+author: "Ben Levy"
+date: "2022-08-02"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(infer)
+library(nycflights13)
+movies_sample <- read_csv("./movies_sample.csv")
+```
+
+# When inference is not needed
+
+## Difference in air time between NYC->BOS and NYC->SFO
+
+```{r}
+bos_sfo <- flights %>%
+    na.omit() %>%
+    filter(dest %in% c("BOS", "SFO"))
+```
+
+```{r}
+bos_sfo %>%
+    group_by(dest) %>%
+    summarize(mean_air = mean(air_time), median_air = median(air_time), sd_air = sd(air_time))
+```
+
+On average, a flight NYC->SFO lasts about 300 minutes longer than NYC->BOS.
+
+### Boxplots
+
+```{r}
+bos_sfo %>%
+    ggplot(aes(x = dest, y = air_time)) +
+    geom_boxplot()
+```
+
+### Density Plots
+
+- x is numerical
+- fill, if necessary, is categorical
+
+```{r}
+bos_sfo %>%
+    ggplot(aes(x = air_time, fill = dest)) +
+    geom_density()
+```
+
+$\mu_b = $ mean air time of all NYC->BOS
+$\mu_s = $ mean air time of all NYC->SFO
+
+$H_0$ -> $\mu_b$ - $\mu_s% = 0$ <-> $\mu_b = \mu_s$ 
+$\mu_b-\mu_s != 0$ <-> $\mu_b != \mu_s$
+
+# Basics of Hypothesis Testing
+
+- These are always statements about the unknown population parameters
+
+1. $H_0$ -> null hypothesis
+    - Usually the no correlation hypothesis
+2. $H_a$ -> alternative hypothesis
+    - The claim we're trying to gather evidence for
+
+- These claims are mutually exclusive and competing
+
+3. Sample data - our data serve as our "evidence," which is, hopefully, in favor of the alternative.
+
+**KEY**: start out by assuming the null is true
+
+**Two possible conclusion**
+
+1. Accept alt/Reject null
+2. Fail to reject null - not enough evidence to accept alt
+
+If we end up rejecting the null (accepting alt), our results are statistically significant
+
+## **Example** Sarah the Chimp
+
+Let p be the population proportion of correct decisions made by the chimp
+
+- $H_0$: p = 0.5 (Sarah was just guessing)
+- $H_a$: p > 0.5 (Sarah was doing better than guessing)
+
+Our evidence, in the form of sample data, was the fact that Sarah made the correct decision *seven out of eight times*.
+    - $\hat{p}$ = 7/8
+    
+Based on the mode of this experiment (if guessing) is 4/8. 7/8 is extremely unlikely to occur.
+
+- This means that, maybe our "hypothetical" world where the null is true *is actually false*, and reality is more in line with the alternative.
+
+# Hypothesis Testing in R
+
+Using `infer`, there are five steps to follow, all arranged in a *pipeline*.
+
+We will compare different movie genres' ratings
+
+Question: what is the relationship between IMDB.com rating and genre (action vs romance) for movies?
+
+$H_0$: $\mu_r$ - $\mu_a$ = 0: there is no association between genre and rating
+$H_1$: $\mu_r$ = $\mu_a$ != 0: there is an association between genre and rating
+
+## EDA
+
+```{r}
+movies_sample %>%
+    group_by(genre) %>%
+    summarize(mean_rating = mean(rating),
+              median_rating = median(rating),
+              sd_rating = sd(rating))
+```
+
+*sample diff in means*:
+
+- $\bar{x}_r - \bar{x}_a = 1.15$; the question is *is our test statistic far enough away from the null value (0) to reject the null?*
+
+```{r}
+movies_sample %>%
+    ggplot(aes(x = genre, y = rating)) +
+    geom_boxplot()
+```
+
+The `infer` pipeline steps:
+
+1. `specify()`
+2. `hypothesize()`: specify the *type* of null hypothesis
+    - `null = "independence"` if comparing *two groups*: genre and rating are independent
+    - `null = "point"` if comparing a single group to a number
+3. `generate()`: generate 1,000 resamples from a world where the null is true
+4. `calculate()`: calculate statistics per sample from the *generate* step
+
+In the generate step, we're simulating a world where the null is true.
+
+- If we're assuming *no relationship between genre and rating*, then we can simulate the null hypothesis by shuffling all the ratings at random between genres.
+
+```{r}
+set.seed(34)
+
+movies_sample %>%
+    group_by(genre) %>%
+    slice_sample(n = 10) -> movies_sample_smaller
+```
+
+```{r}
+movies_sample %>%
+    specify(response = rating, explanatory = genre) %>%
+    hypothesize(null = "independence") %>%
+    generate(reps = 10000000, type = "permute") %>%
+    calculate(stat = "diff in means") -> null_distribution
+
+null_distribution %>%
+    get_p_value(obs_stat = 1.15, direction = "both")
+
+visualize(null_distribution)+ # represents the diff in means from a world where the null is true
+    shade_p_value(obs_stat = 1.15, direction = "both")
+```
+
+p-value: the probability of observing a sample statistic at least as extreme as ours in a world where the null is true; the percent of data exceeding the observed statistic, under the null hypothesis
+
+**Our p-value is < 0.001: we say this because it is possible, given more reps, to have an outlier p-value.**
+
+With this p-value, we must form a decision (i.e., reject or fail to reject the null hyp) and a conclusion.
+
+- We compare the p-value to a pre-set *significance level*, denoted by $\alpha$. This is usually 5% (0.05).
+
+1. If p < 0.05, reject the null and conclude the alternative
+2. If p > 0.05, fail to reject the null
+
+In our "study", p < 0.001, so we reject the null. Thus, there is a correlation between movie genre and rating.
+
+## Relationship between sample size and p-value
+
+```{r}
+set.seed(2)
+
+movies_smaller <- movies_sample %>%
+    group_by(genre) %>%
+    slice_sample(n = 10) %>%
+    ungroup()
+
+movies_smaller %>%
+    group_by(genre) %>%
+    summarize(mean_rating = mean(rating))
+
+# diff of 2.39 (mu_r-mu_a)
+```
+

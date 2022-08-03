@@ -31,8 +31,12 @@ mythbusters_yawn %>%
   get_p_value(obs_stat = 0.0441, direction = "greater")
 ```
 
-**TYPE YOUR ANSWER HERE**
-
+1. Pipes dataset into specify (data = ...)
+2. Specifies that we're looking at the `yawn` column with respect to the "group" column, looking at only successful instances.
+3. Setting the hypothesis as though `yawn` and `group` aren't correlated (independent).
+4. Generates 1000 reps in a world where the null hypothesis is true (with replacement).
+5. Calculating the difference in proportions; the `order` parameter specifies the "grouping" of how this statistic is calculated.
+6. Finding the percent of values within the null hypothesis-world that exceed the observed proportion (0.0441).
 
 ## Exercise 2
 Average income varies from one region of the country to another, and it often reflects both lifestyles and regional living expenses. Suppose a new graduate is considering a job in two locations, Cleveland, OH and Sacramento, CA, and they want to see whether the average income in one of these cities is higher than the other. Tbey would like to conduct a hypothesis test based on two randomly selected samples from the 2000 Census.
@@ -103,7 +107,8 @@ Using `NHANES_sample`, perform a hypothesis test to see if there is a significan
 
 ```{r}
 NHANES_sample = NHANES_sample %>%
-  filter(Work != "Looking")
+    filter(Work != "Looking") %>%
+    
 ```
 
 In performing the hypothesis test, state the null and alternative hypotheses, the *observed difference in proportions*, the p-value, and conclusion for the test. 
