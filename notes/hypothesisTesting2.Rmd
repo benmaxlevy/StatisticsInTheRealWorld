@@ -4,3 +4,120 @@ author: "Ben Levy"
 date: "2022-08-03"
 output: html_document
 ---
+
+```{r}
+library(tidyverse)
+library(infer)
+library(moderndive)
+movies_sample <- read_csv("./movies_sample.csv")
+```
+
+# Day Two
+
+$H_0: \mu = \mu_0$
+$H_a: \mu != \mu_0$
+
+## Point Hypotheses
+
+Can we conclude, using our sample, that the population mean movie rating on IMDB is *different* from 6.38?
+
+- $H_0: \mu = 6.38$
+- $H_a: \mu < 6.38$ because movies are bad
+
+### EDA
+
+```{r}
+movies_sample %>%
+    ggplot(aes(x = rating)) +
+    geom_histogram(color = "white", fill = "hotpink1")
+```
+
+Descriptive Statistics
+
+```{r}
+mean(movies_sample$rating)
+```
+
+### Analysis
+
+```{r}
+movies_sample %>%
+    specify(response = rating) %>%
+    hypothesize(null = "point", mu = 6.38) %>%
+    generate(reps = 1000) %>% # shift center of distribution (mode) to 6.38 (the mu provided)
+    calculate(stat = "mean") %>%
+    get_p_value(direction = "less", obs_stat = 5.61)
+```
+
+p < 0.001; reject the null. We have enough evidence to conclude that the average IMDB movie rating is less than the 6.38 Some Guy claimed on Quora.
+
+## Test for Comparing Two Proportions
+
+We'll use `mythbusters_yawn` dataset to compare two proportions.
+
+The Mythbusters wanted to test whether *yawning is contagious*.
+
+- 50 participants recruited
+- Each participant was "interviewed" by a member of the show
+    - Group 1: interviewed by a "seed" who did yawn
+    - Group 2: interviewed by a "control" who didn't yawn
+
+$H_0:  p_s = p_c$
+$H_a: p_s > p_c$
+
+```{r}
+mythbusters_yawn
+```
+
+### EDA
+
+Because we have *two categorical variables*, let's look at stacked bar graphs
+
+```{r}
+mythbusters_yawn %>%
+    ggplot(aes(x = group, fill = yawn)) +
+    geom_bar(position = "fill")
+```
+
+Calculate sample diff in props:
+
+```{r}
+mythbusters_yawn %>%
+    count(group, yawn)
+```
+
+```{r}
+mythbusters_yawn %>%
+    specify(response = yawn, explanatory = group, success = "yes") %>%
+    calculate(stat = "diff in props")
+```
+
+Test:
+
+```{r}
+mythbusters_yawn %>%
+    specify(response = yawn, explanatory = group, success = "yes") %>%
+    hypothesize(null = "independence") %>%
+    generate(reps = 1000) %>%
+    calculate(stat = "diff in props", order = c("seed", "control")) %>%
+    get_p_value(direction = "both", obs_stat = 0.04411765)
+```
+
+- If the null were true and yawning was not contagious, there would be ~50% chance of observing data at least as extreme as ours.
+
+# Connecting Back to Confidence Intervals
+
+Recap: confidence intervals provide a range of plausible values for the unknown population parameter.
+
+If you use an infer pipeline for a hypothesis test, you can tweak it to get a CI by removing the hypothesize() step and change get_p_value to get_ci
+
+Because 0 is in the CI (in Anthony's notes), we're claiming with 95% confidence that ZERO is a plausible value for $p_s - p_c$.
+    - We cannot accept nor reject the null based on this because it includes 0 and other non-zero values
+    
+# Inference for Regression
+
+```{r}
+lm_fit <- lm(price ~ bedrooms + sqft_living + waterfront + sqft_living*waterfront, data = house_prices) 
+get_regression_table(lm_fit)
+```
+
