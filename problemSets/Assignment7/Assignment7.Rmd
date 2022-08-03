@@ -57,35 +57,42 @@ View(cle_sac)
 ### (a)
 State the null and alternative hypotheses for a test of whether the average income is different between Cleveland and Sacramento. 
 
-**TYPE YOUR ANSWER HERE**
+$H_0: \mu_c = \mu_s$
+$H_a: \mu_c \neq \mu_s$
 
 ### (b)
 Construct side-by-side boxplots or strip plots of income for the two cities. What does this suggest about the difference in the average income?
 
 ```{r}
-# Type your code here
-
+cle_sac %>%
+    ggplot(aes(x = metro_area, y = income)) +
+    geom_boxplot()
 ```
 
-**TYPE YOUR ANSWER HERE**
+A decent difference in mean income with Sacramento having a higher mean.
 
 ### (c)
 Calculate the *difference in the average income* between the two cities. Call this average `avg_diff`. 
 
 ```{r}
-# Type your code here
-
+avg_diff <- cle_sac %>%
+    specify(response = income, explanatory = metro_area) %>%
+    calculate(stat = "diff in means")
 ```
 
 ### (d)
 Conduct the hypothesis test using an `infer` pipeline. The code below will get you started. State the P-value (use `get_p_value()`) and the conclusion of the test. 
 
 ```{r}
-# Type your code here
+cle_sac %>%
+    specify(response = income, explanatory = metro_area) %>%
+    hypothesize(null = "independence") %>%
+    generate(reps = 1000, type = "permute") %>%
+    calculate(stat = "diff in means") %>%
+    get_p_value(direction = "both", obs_stat = -4960)
 ```
 
-**TYPE YOUR ANSWER HERE**
-
+13.2% -> the null hypothesis failed to be rejected -> there is no *significant* correlation between location (Sacramento and Cleveland) and income (USD).
 
 ## Exercise 3
 
@@ -108,20 +115,29 @@ Using `NHANES_sample`, perform a hypothesis test to see if there is a significan
 ```{r}
 NHANES_sample = NHANES_sample %>%
     filter(Work != "Looking") %>%
-    
+    specify(response = Work, explanatory = Diabetes, success = "Working") %>%
+    hypothesize(null = "independence") %>%
+    generate(reps = 1000) %>% 
+    calculate(stat = "diff in props", order = c("Yes", "No"))
 ```
 
 In performing the hypothesis test, state the null and alternative hypotheses, the *observed difference in proportions*, the p-value, and conclusion for the test. 
 
 ```{r}
-# Type your code here
+NHANES %>%
+    slice_sample(n = 1500) %>%
+    filter(Work != "Looking") %>%
+    specify(response = Work, explanatory = Diabetes, success = "Working") %>%
+    calculate(stat = "diff in props")
 
+NHANES_sample %>%
+    get_p_value(direction = "both", obs_stat = 0.2766473)
 ```
 
-**TYPE YOUR ANSWER HERE**
+$H_0: p_d = p_n$
+$H_a: p_d \neq p_n$
 
-
-
+p < 0.001 -> reject null hypothesis -> there is a correlation between diabetes and employment status.
 
 
 * * *
